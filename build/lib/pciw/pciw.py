@@ -118,7 +118,7 @@ class __func__:
 			)
 		return do
 	
-	def get_motherboard_info_nt() -> __types_nt__.motherboard:
+	def get_motherboard_info_nt() -> list:
 		i = __func__.values_str_to_dict(subprocess.check_output("wmic BASEBOARD get Name,PoweredOn,Product,Removable,Replaceable,RequiresDaughterBoard,SerialNumber,Tag,Version,HostingBoard,HotSwappable,Manufacturer /FORMAT:VALUE").decode(errors="ignore"))[0]
 		return __types_nt__.motherboard(
 			str(i["Name"]),

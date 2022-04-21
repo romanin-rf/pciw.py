@@ -17,6 +17,5 @@ setuptools.setup(
 		)
 	).read(),
 	author='ProgrammerFromParlament',
-	license='MIT',
-	requires=["screeninfo==0.7", "psutil==5.8.0", "py-cpuinfo==8.0.0"],
+	license='MIT'
 )
