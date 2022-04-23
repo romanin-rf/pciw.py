@@ -10,7 +10,7 @@ from dateutil import parser
 
 class __info__:
 	name = "pciw"
-	version = ["0.1", 0.1]
+	version = ["0.2", 0.2]
 	authors = ["ProgrammerFromParlament"]
 
 class __data__:
@@ -144,6 +144,16 @@ class __func__:
 		characteristics_ids, characteristics = list(eval(str(i["BiosCharacteristics"]))), []
 		for cid in characteristics_ids:
 			characteristics.append(__data__.nt_bios_characteristic[cid])
+		try:
+			langlist = [i.split("|") for i in list(eval(i["ListOfLanguages"]))]
+		except:
+			langlist = None
+		try:
+			langcur = str(i["CurrentLanguage"]).split("|")
+			if len(langcur) < 3:
+				langcur = None
+		except:
+			langcur = None
 		return __types_nt__.bios(
 			str(i["Name"]),
 			str(i["Manufacturer"]),
@@ -151,8 +161,8 @@ class __func__:
 			str(i["Version"]),
 			__func__.windate_to_datetime(str(i["ReleaseDate"])),
 			str(i["SerialNumber"]),
-			str(i["CurrentLanguage"]).split("|"),
-			[i.split("|") for i in list(eval(i["ListOfLanguages"]))],
+			langcur,
+			langlist,
 			list(set(characteristics)),
 			__types_nt__.smbios(
 				str(i["SMBIOSBIOSVersion"]),
@@ -195,6 +205,20 @@ class CPU():
 	def get_load(self) -> __types_nt__.cpu_load:
 		timesp, times = psutil.cpu_times_percent(), psutil.cpu_times()
 		return __types_nt__.cpu_load(round((times.user + times.system + times.interrupt + times.dpc), 4), round(100 - timesp.idle, 1))
+	
+	def to_dict(self) -> dict[str, Any]:
+		return {
+			"name": self.name,
+			"model": self.model,
+			"family": self.family,
+			"stepping": self.stepping,
+			"architecture": self.architecture,
+			"bits": self.bits,
+			"frequency": self.frequency,
+			"cores_count": self.cores_count,
+			"cache": self.cache,
+			"flags": self.flags
+		}
 
 class RAM():
 	def __init__(self) -> None:

@@ -3,7 +3,7 @@ This module can obtain __full information__ about the `CPU`, `RAM`, `GPU`, `BIOS
 So far, it __only works fully__ on a `Windows` system.
 ## Install
 ```
-pip install py-cpuinfo screeninfo psutil pciw.py
+pip install python-dateutil py-cpuinfo screeninfo psutil
 ```
 ## Example
 ```python
@@ -25,14 +25,15 @@ cpu.flags
 
 cpu.get_load_all() # -> cpu_load_all(standard, percent)
 cpu.get_load()     # -> cpu_load(standard, percent)
-
-"""GPU INFO"""
-gpu.videocard      # -> [videocard(name, processor, memory, company, availability, driver_date, driver_version), ...]
+cpu.to_dict()      # -> {"name": "...", "model": "...", ...}
 
 """RAM INFO"""
 ram.memory_cards   # -> [memory_card(model, type, form_factor, capacity, frequency, serial_number, data_width, location), ...]
 
 ram.get_status()   # -> psutil.virtual_memory()
+
+"""GPU INFO"""
+gpu.videocard      # -> [videocard(name, processor, memory, company, availability, driver_date, driver_version), ...]
 
 """Monitors INFO"""
 monitors.displays  # -> [monitor(name, primary, size, size_mm, position), ...]

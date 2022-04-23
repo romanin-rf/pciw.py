@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: pciw.py
-Version: 0.1
+Version: 0.2
 Summary: Allows you to retrieve information about the system.
 Home-page: https://github.com/romanin-rf/pciw.py
 Author: ProgrammerFromParlament
