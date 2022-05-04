@@ -3,7 +3,7 @@ import setuptools
 
 setuptools.setup(
 	name='pciw.py',
-	version='0.2',
+	version='0.2.1',
 	description='Allows you to retrieve information about the system.',
 	keywords=['pciw', 'pciw.py'],
 	packages=setuptools.find_packages(),
