@@ -3,7 +3,7 @@ This module can obtain __full information__ about the `CPU`, `RAM`, `GPU`, `BIOS
 So far, it __only works fully__ on a `Windows` system.
 ## Install
 ```
-pip install python-dateutil py-cpuinfo screeninfo psutil
+pip install python-dateutil py-cpuinfo screeninfo psutil https://github.com/romanin-rf/pciw.py/releases/download/v0.2.1/pciw.py-0.2.1-py3-none-any.whl
 ```
 ## Example
 ```python
