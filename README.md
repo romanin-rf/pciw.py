@@ -33,7 +33,7 @@ ram.memory_cards   # -> [memory_card(model, type, form_factor, capacity, frequen
 ram.get_status()   # -> psutil.virtual_memory()
 
 """GPU INFO"""
-gpu.videocard      # -> [videocard(name, processor, memory, company, availability, driver_date, driver_version), ...]
+gpu.videocards     # -> [videocard(name, processor, memory, company, availability, driver_date, driver_version), ...]
 
 """Monitors INFO"""
 monitors.displays  # -> [monitor(name, primary, size, size_mm, position), ...]
