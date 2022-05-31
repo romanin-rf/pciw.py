@@ -84,6 +84,19 @@ class Converter:
             )
         except:
             pass
+    
+    def winlang_to_tuple(string: Union[List[str], str]) -> Optional[Union[List[Tuple[str, str, str]], Tuple[str, str, str]]]:
+        try:
+            if isinstance(string, list):
+                return [tuple(i.split("|")) for i in string]
+            elif isinstance(string, str):
+                return tuple(string.split("|"))
+        except:
+            pass
+    
+    def sn(string: str) -> Optional[str]:
+        if not string.startswith("To be filled by O.E.M."):
+            return string
 
 # ! Функция запросов к WMIC
 def request(
@@ -121,6 +134,9 @@ def get_vmtype(code: int) -> str:
 def get_varch(code: int) -> str:
     return units.NT_TYPES.VIDEO_ARCHITECTURE[code]
 
+def get_vaval(code: int) -> str:
+    return units.NT_TYPES.VIDEO_ALAILABILITY[code]
+
 # ! Get-функции
 def get_cpu() -> Dict[str, Any]:
     info = cpuinfo.get_cpu_info()
@@ -148,7 +164,7 @@ def get_ram() -> List[Dict[str, Any]]:
                 "device_location": i["DeviceLocator"],
                 "form_factor": get_mff(Converter.str_to_int(i["FormFactor"])),
                 "type": get_mtype(Converter.str_to_int(i["MemoryType"])),
-                "serial_number": i["SerialNumber"].replace(" ", ""),
+                "serial_number": Converter.sn(i["SerialNumber"]),
                 "part_number": i["PartNumber"].replace(" ", ""),
                 "capacity": Converter.str_to_int(i["Capacity"]),
                 "frequency": Converter.str_to_int(i["Speed"]),
@@ -183,7 +199,48 @@ def get_videocards() -> List[Dict[str, Any]]:
                 "driver_date": Converter.windate_to_datetime(i["DriverDate"]),
                 "memory_capacity": Converter.str_to_int(i["AdapterRAM"]),
                 "memory_type": get_vmtype(Converter.str_to_int(i["VideoMemoryType"])),
-                "architecture": get_varch(Converter.str_to_int(i["VideoArchitecture"]))
+                "architecture": get_varch(Converter.str_to_int(i["VideoArchitecture"])),
+                "availability": get_vaval(Converter.str_to_int(i["Availability"]))
             }
         )
     return uld
+
+def get_motherboard() -> Dict[str, Any]:
+    info = Converter.value_to_dict(request(
+            "BASEBOARD", "GET", "Name,PoweredOn,Product,Removable,Replaceable,RequiresDaughterBoard,SerialNumber,Tag,Version,HostingBoard,HotSwappable,Manufacturer"
+        )
+    )[0]
+    return {
+        "name": info["Name"],
+        "tag": info["Tag"],
+        "version": info["Version"],
+        "product": info["Product"],
+        "serial_number": Converter.sn(info["SerialNumber"]),
+        "manufacturer": info["Manufacturer"],
+        "power_on": Converter.str_to_bool(info["PoweredOn"]),
+        "removable": Converter.str_to_bool(info["Removable"]),
+        "replaceable": Converter.str_to_bool(info["Replaceable"]),
+        "rdb": Converter.str_to_bool(info["RequiresDaughterBoard"]),
+        "hosting_board": Converter.str_to_bool(info["HostingBoard"]),
+        "hot_swappable": Converter.str_to_bool(info["HotSwappable"])
+    }
+
+def get_bios() -> Dict[str, Any]:
+    info = Converter.value_to_dict(request(
+            "BIOS", "LIST", "FULL"
+        )
+    )[0]
+    return {
+        "name": info["Name"],
+        "manufacturer": info["Manufacturer"],
+        "release_date": Converter.windate_to_datetime(info["ReleaseDate"]),
+        "languages": Converter.winlang_to_tuple(list(eval(info["ListOfLanguages"]))),
+        "current_language": Converter.winlang_to_tuple(info["CurrentLanguage"]),
+        "is_primary": Converter.str_to_bool(info["CurrentLanguage"]),
+        "serial_number": Converter.sn(info["SerialNumber"]),
+        "version": info["Version"],
+        "smbios_version": info["SMBIOSBIOSVersion"],
+        "smbios_major_version": info["SMBIOSMajorVersion"],
+        "smbios_minor_version": info["SMBIOSMinorVersion"],
+        "smbios_present": Converter.str_to_bool(info["SMBIOSPresent"])
+    }

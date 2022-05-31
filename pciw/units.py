@@ -65,7 +65,7 @@ class NT_TYPES:
     VIDEO_ALAILABILITY = {
         1: "other",
         2: None,
-        3: "works",
+        3: "work",
         4: "warning",
         5: "tested",
         6: "not_applicable",

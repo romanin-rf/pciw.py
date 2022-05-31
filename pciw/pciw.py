@@ -27,6 +27,13 @@ else:
         except:
             import WindowsParser as Parser
 
+# ! Другое
+@dataclass
+class Language:
+    id: str
+    mark: str
+    encoding: str
+
 # ! Dataclasses Types Classes
 @dataclass
 class CPUCache:
@@ -51,14 +58,14 @@ class RAM:
     device_location: str
     form_factor: Optional[str]
     type: str
-    serial_number: str
+    serial_number: Optional[str]
     part_number: str
     capacity: int
     frequency: int
     data_width: int
 
 @dataclass
-class VideoAdapter:
+class GPU:
     name: str
     model: str
     company: str
@@ -67,6 +74,7 @@ class VideoAdapter:
     memory_capacity: int
     memory_type: Optional[str]
     architecture: Optional[str]
+    availability: Optional[int]
 
 @dataclass
 class Monitor:
@@ -74,6 +82,40 @@ class Monitor:
     size: Tuple[int, int]
     size_mm: Tuple[int, int]
     is_primary: bool
+
+@dataclass
+class Motherboard:
+    name: str
+    tag: str
+    version: str
+    product: str
+    serial_number: Optional[str]
+    manufacturer: str
+    power_on: Optional[bool]
+    removable: Optional[bool]
+    replaceable: Optional[bool]
+    rdb: Optional[bool]
+    hosting_board: Optional[bool]
+    hot_swappable: Optional[bool]
+
+@dataclass
+class SMBIOS:
+    version: str
+    major_version: str
+    minor_version: str
+    present: Optional[bool]
+
+@dataclass
+class BIOS:
+    name: str
+    manufacturer: str
+    release_date: datetime.datetime
+    languages: List[Language]
+    current_language: Language
+    is_primary: Optional[bool]
+    serial_number: Optional[str]
+    version: str
+    smbios: SMBIOS
 
 # ! Открытые функции
 def get_cpu_info() -> CPU:
@@ -88,8 +130,25 @@ def get_cpu_info() -> CPU:
 def get_ram_info() -> List[RAM]:
     return [RAM(**bank) for bank in Parser.get_ram()]
 
-def get_video_info() -> List[VideoAdapter]:
-    return [VideoAdapter(**va) for va in Parser.get_videocards()]
+def get_video_info() -> List[GPU]:
+    return [GPU(**va) for va in Parser.get_videocards()]
 
 def get_monitors_info() -> List[Monitor]:
     return [Monitor(**monitor) for monitor in Parser.get_monitors()]
+
+def get_motherboard_info() -> Motherboard:
+    info = Parser.get_motherboard()
+    return Motherboard(**info)
+
+def get_bios_info() -> BIOS:
+    info = Parser.get_bios()
+    smbios = SMBIOS(
+        info["smbios_version"],
+        info["smbios_major_version"],
+        info["smbios_minor_version"],
+        info["smbios_present"]
+    )
+    del info["smbios_version"], info["smbios_major_version"], info["smbios_minor_version"], info["smbios_present"]
+    info["languages"] = [Language(*i) for i in info["languages"]]
+    info["current_language"] = Language(*info["current_language"])
+    return BIOS(**info, smbios=smbios)
