@@ -31,6 +31,12 @@ def replaces(s: str, d: Dict[str, str]) -> str:
         s = s.replace(i[0], i[1])
     return s
 
+def startswiths(string: str, sl: List[str]) -> bool:
+    for i in sl:
+        if string.startswith(i):
+            return True
+    return False
+
 # ! Класс конвертации данных
 class Converter:
     def value_to_dict(string: str) -> List[Dict[str, Optional[str]]]:
@@ -95,7 +101,7 @@ class Converter:
             pass
     
     def sn(string: str) -> Optional[str]:
-        if not string.startswith("To be filled by O.E.M."):
+        if not startswiths(string, units.SERIAL_NUMBER_EXCEPTIONS):
             return string
 
 # ! Функция запросов к WMIC
@@ -230,12 +236,17 @@ def get_bios() -> Dict[str, Any]:
             "BIOS", "LIST", "FULL"
         )
     )[0]
+    try:
+        langs = Converter.winlang_to_tuple(list(eval(info["ListOfLanguages"])))
+        clang = Converter.winlang_to_tuple(info["CurrentLanguage"])
+    except:
+        pass
     return {
         "name": info["Name"],
         "manufacturer": info["Manufacturer"],
         "release_date": Converter.windate_to_datetime(info["ReleaseDate"]),
-        "languages": Converter.winlang_to_tuple(list(eval(info["ListOfLanguages"]))),
-        "current_language": Converter.winlang_to_tuple(info["CurrentLanguage"]),
+        "languages": langs,
+        "current_language": clang,
         "is_primary": Converter.str_to_bool(info["CurrentLanguage"]),
         "serial_number": Converter.sn(info["SerialNumber"]),
         "version": info["Version"],

@@ -1,20 +1,12 @@
 
-# ! Для __repr__
-CPU_DATACLASS_PARAMERTS: list[str] = [
-    "name", "model", "familys", "stepping",
-    "architecture", "bits", "frequency", "cores_count",
-    "flags", "cache"
+# ! Для функций
+SERIAL_NUMBER_EXCEPTIONS = [
+    "To be filled",
+    "Default"
 ]
-RAM_DATACLASSES_PARAMERTS: list[str] = [
-    "device_location", "form_factor", "type", "serial_number", 
-    "part_number", "capacity", "frequency", "data_width"
-]
-VIDEO_ADAPTER_DATACLASSES_PARAMERTS: list[str] = [
-    "name", "model", "company", "driver_version", "driver_date", 
-    "memory_capacity", "memory_type", "architecture"
-]
+
 # ! Для проверки поддежки
-SUPPORTED_SYSTEMS: list[str] = [
+SUPPORTED_SYSTEMS = [
     "Windows" # TODO: Добить поддержку Linux
 ]
 # ! Для определения типа 

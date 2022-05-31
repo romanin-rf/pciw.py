@@ -149,6 +149,10 @@ def get_bios_info() -> BIOS:
         info["smbios_present"]
     )
     del info["smbios_version"], info["smbios_major_version"], info["smbios_minor_version"], info["smbios_present"]
-    info["languages"] = [Language(*i) for i in info["languages"]]
-    info["current_language"] = Language(*info["current_language"])
+    try:
+        info["languages"] = [Language(*i) for i in info["languages"]]
+        info["current_language"] = Language(*info["current_language"])
+    except:
+        info["languages"] = None
+        info["current_language"] = None
     return BIOS(**info, smbios=smbios)
