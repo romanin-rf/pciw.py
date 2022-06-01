@@ -29,6 +29,11 @@ else:
 
 # ! Другое
 @dataclass
+class Temperature:
+    C: int
+    F: int
+
+@dataclass
 class Language:
     id: str
     mark: str
@@ -54,7 +59,7 @@ class CPU:
     cache: CPUCache
 
 @dataclass
-class RAM:
+class RAMBank:
     device_location: str
     form_factor: Optional[str]
     type: str
@@ -93,7 +98,7 @@ class NGPUStatus:
     memory_total: float
     memory_used: float
     memory_free: float
-    temperature: int
+    temperature: Temperature
     fan_speed: int
 
 @dataclass
@@ -137,8 +142,13 @@ class BIOS:
     version: str
     smbios: SMBIOS
 
+# ! Внутринние функции
+def __Ft(C: int) -> int:
+    return int((C*(9/5))+32)
+
 # ! Открытые функции
 def get_cpu_info() -> CPU:
+    """Returns the `CPU` dataclass containing information about the CPU"""
     cpu_info = Parser.get_cpu()
     cache = CPUCache(
         cpu_info["cache"]["l2_size"],
@@ -147,20 +157,25 @@ def get_cpu_info() -> CPU:
     del cpu_info["cache"]
     return CPU(**cpu_info, cache=cache)
 
-def get_ram_info() -> List[RAM]:
-    return [RAM(**bank) for bank in Parser.get_ram()]
+def get_ram_info() -> List[RAMBank]:
+    """Returns a `list` with `RAMBank` dataclasses containing information about each RAM die"""
+    return [RAMBank(**bank) for bank in Parser.get_ram()]
 
 def get_gpu_info() -> List[GPU]:
+    """Returns a `list` with `GPU` dataclasses containing information about each video card"""
     return [GPU(**va) for va in Parser.get_videocards()]
 
 def get_monitors_info() -> List[Monitor]:
+    """Returns a `list` with `Monitor` dataclasses, containing information about each monitor"""
     return [Monitor(**monitor) for monitor in Parser.get_monitors()]
 
 def get_motherboard_info() -> Motherboard:
+    """Returns the dataclass `Motherboard`, containing information about the motherboard"""
     info = Parser.get_motherboard()
     return Motherboard(**info)
 
 def get_bios_info() -> BIOS:
+    """Returns the `BIOS` dataclass, containing information about the BIOS"""
     info = Parser.get_bios()
     smbios = SMBIOS(
         info["smbios_version"],
@@ -179,12 +194,16 @@ def get_bios_info() -> BIOS:
 
 if units.NVIDIA_SMI_PATH is not None:
     def get_ngpu_info() -> List[NGPU]:
-        """(`ONLY FOR VIDEOCARDS FROM NVIDIA`)"""
+        """Returns the `NGPU` dataclass, containing video card information (ONLY FOR NVIDIA VIDEO CARDS)"""
         return [NGPU(**ngpu) for ngpu in Parser.get_nvidia_videocards()]
 
     def get_ngpu_status(id: Optional[int]=None) -> Optional[Union[List[NGPUStatus], NGPUStatus]]:
-        """(`ONLY FOR VIDEOCARDS FROM NVIDIA`)"""
-        statuses = [NGPUStatus(**ngpus) for ngpus in Parser.get_nvidia_videocards_status()]
+        """Returns the `NGPUStatus` dataclass, containing data about the status of the video cards (ONLY FOR NVIDIA VIDEO CARDS)"""
+        statuses = []
+        for i in Parser.get_nvidia_videocards_status():
+            i["temperature"] = Temperature(i["temperature"], __Ft(i["temperature"]))
+            statuses.append(NGPUStatus(**i))
+
         if id is not None:
             for i in statuses:
                 if i.id == id:

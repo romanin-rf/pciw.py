@@ -11,7 +11,7 @@ console.rule("RAM INFO")
 console.print(pciw.get_ram_info())
 
 console.rule("GPU INFO")
-console.print(pciw.get_video_info())
+console.print(pciw.get_gpu_info())
 
 console.rule("MONITORS INFO")
 console.print(pciw.get_monitors_info())
@@ -21,3 +21,7 @@ console.print(pciw.get_motherboard_info())
 
 console.rule("BIOS INFO")
 console.print(pciw.get_bios_info())
+
+console.rule("NVIDIA VIDEOCARDS AND STATUS")
+console.print(pciw.get_ngpu_info())
+console.print(pciw.get_ngpu_status())
