@@ -1,12 +1,12 @@
 # pciw.py
-This module can obtain __full information__ about the `CPU`, `RAM`, `GPU` and `monitors`.
+This module can obtain __full information__ about the `CPU`, `RAM`, `GPU`, `Monitors`, `Motherboard` and `BIOS`.
 So far, it __only works fully__ on a `Windows` system.
 ## Install
 ```
-pip install https://github.com/romanin-rf/pciw.py/releases/download/v0.5/pciw.py-0.5-py3-none-any.whl
+pip install https://github.com/romanin-rf/pciw.py/releases/download/v0.5.1/pciw.py-0.5.1-py3-none-any.whl
 ```
 ## Example
-Для примера можите запустить pciw как `__main__`:
+For the example made by `__main__.py`:
 ```
 python -m pciw
 ```
