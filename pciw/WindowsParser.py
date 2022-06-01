@@ -68,12 +68,21 @@ class Converter:
         elif string == "false":
             return False
     
-    def str_to_int(string: str) -> Optional[int]:
-        string = string.lower().replace(" ", "")
-        try:
-            return int(string)
-        except:
-            pass
+    def str_to_int(string: Optional[str]) -> Optional[int]:
+        if string is not None:
+            string = string.lower().replace(" ", "")
+            try:
+                return int(string)
+            except:
+                pass
+    
+    def str_to_float(string: Optional[str]) -> Optional[int]:
+        if string is not None:
+            string = string.lower().replace(" ", "")
+            try:
+                return float(string)
+            except:
+                pass
     
     def windate_to_datetime(string: str) -> Optional[datetime.datetime]:
         try:
@@ -100,9 +109,19 @@ class Converter:
         except:
             pass
     
-    def sn(string: str) -> Optional[str]:
-        if not startswiths(string, units.SERIAL_NUMBER_EXCEPTIONS):
-            return string
+    def sn(string: Optional[str]) -> Optional[str]:
+        if string is not None:
+            if not startswiths(string, units.SERIAL_NUMBER_EXCEPTIONS):
+                return string
+    
+    def from_csv(data: str, dvalue: str, dline: str) -> List[List[str]]:
+        data_values = []
+        lines = removes(data.split(dline), [""])
+        for i in lines:
+            data_values.append(
+                i.split(dvalue)
+            )
+        return data_values
 
 # ! Функция запросов к WMIC
 def request(
@@ -142,6 +161,12 @@ def get_varch(code: int) -> str:
 
 def get_vaval(code: int) -> str:
     return units.NT_TYPES.VIDEO_ALAILABILITY[code]
+
+def tnvv(value: Optional[str]) -> str:
+    if value is not None:
+        if value in units.NVIDIA_VALUES_EXCEPTIONS:
+            return None
+    return value
 
 # ! Get-функции
 def get_cpu() -> Dict[str, Any]:
@@ -210,6 +235,58 @@ def get_videocards() -> List[Dict[str, Any]]:
             }
         )
     return uld
+
+def get_nvidia_videocards() -> List[Dict[str, Any]]:
+    info, nvidia_videocards = Converter.from_csv(
+        subprocess.check_output(
+            [
+                units.NVIDIA_SMI_PATH,
+                "--query-gpu=index,uuid,utilization.gpu,driver_version,name,gpu_serial,display_active,display_mode",
+                "--format=csv,noheader,nounits"
+            ]
+        ).decode(errors="ignore"),
+        ", ",
+        "\r\n"
+    ), []
+    for i in info:
+        nvidia_videocards.append(
+            {
+                "name": exists_key(4, i)[1],
+                "id": Converter.str_to_int(exists_key(0, i)[1]),
+                "uuid": exists_key(1, i)[1],
+                "ugpu": tnvv(exists_key(2, i)[1]),
+                "driver_version": exists_key(3, i)[1],
+                "serial_number": Converter.sn(tnvv(exists_key(5, i)[1])),
+                "display_active": tnvv(exists_key(6, i)[1]),
+                "display_mode": tnvv(exists_key(7, i)[1])
+            }
+        )
+    return nvidia_videocards
+
+def get_nvidia_videocards_status() -> List[Dict[str, Any]]:
+    info, nvidia_videocards_status = Converter.from_csv(
+        subprocess.check_output(
+            [
+                units.NVIDIA_SMI_PATH,
+                "--query-gpu=index,memory.total,memory.used,memory.free,temperature.gpu,fan.speed",
+                "--format=csv,noheader,nounits"
+            ]
+        ).decode(errors="ignore"),
+        ", ",
+        "\r\n"
+    ), []
+    for i in info:
+        nvidia_videocards_status.append(
+            {
+                "id": Converter.str_to_int(exists_key(0, i)[1]),
+                "memory_total": Converter.str_to_float(exists_key(1, i)[1]),
+                "memory_used": Converter.str_to_float(exists_key(2, i)[1]),
+                "memory_free": Converter.str_to_float(exists_key(3, i)[1]),
+                "temperature": Converter.str_to_int(exists_key(4, i)[1]),
+                "fan_speed": Converter.str_to_int(exists_key(5, i)[1])
+            }
+        )
+    return nvidia_videocards_status
 
 def get_motherboard() -> Dict[str, Any]:
     info = Converter.value_to_dict(request(

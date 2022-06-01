@@ -1,14 +1,25 @@
+import os
+import platform
 
 # ! Для функций
 SERIAL_NUMBER_EXCEPTIONS = [
     "To be filled",
     "Default"
 ]
-
+NVIDIA_VALUES_EXCEPTIONS = [
+    "[Not Supported]"
+]
 # ! Для проверки поддежки
 SUPPORTED_SYSTEMS = [
     "Windows" # TODO: Добить поддержку Linux
 ]
+NVIDIA_SMI_PATH_SUPPORTED = {
+    "Windows": "nsmi.exe"
+}
+try:
+    NVIDIA_SMI_PATH = os.path.join(os.path.dirname(__file__), "data", NVIDIA_SMI_PATH_SUPPORTED[platform.system()])
+except:
+    NVIDIA_SMI_PATH = None
 # ! Для определения типа 
 class NT_TYPES:
     MEMORY_TYPE = [

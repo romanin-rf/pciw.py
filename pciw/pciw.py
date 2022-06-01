@@ -2,7 +2,7 @@ from . import units
 import platform
 import datetime
 from dataclasses import dataclass
-from typing import Optional, List, Tuple
+from typing import Optional, List, Tuple, Union
 # * Локальным импорт
 
 # ! Исключения
@@ -77,6 +77,26 @@ class GPU:
     availability: Optional[int]
 
 @dataclass
+class NGPU:
+    name: str
+    id: int
+    uuid: str
+    ugpu: Optional[str]
+    driver_version: Optional[str]
+    serial_number: Optional[str]
+    display_active: Optional[str]
+    display_mode: Optional[str]
+
+@dataclass
+class NGPUStatus:
+    id: int
+    memory_total: float
+    memory_used: float
+    memory_free: float
+    temperature: int
+    fan_speed: int
+
+@dataclass
 class Monitor:
     name: str
     size: Tuple[int, int]
@@ -130,7 +150,7 @@ def get_cpu_info() -> CPU:
 def get_ram_info() -> List[RAM]:
     return [RAM(**bank) for bank in Parser.get_ram()]
 
-def get_video_info() -> List[GPU]:
+def get_gpu_info() -> List[GPU]:
     return [GPU(**va) for va in Parser.get_videocards()]
 
 def get_monitors_info() -> List[Monitor]:
@@ -156,3 +176,18 @@ def get_bios_info() -> BIOS:
         info["languages"] = None
         info["current_language"] = None
     return BIOS(**info, smbios=smbios)
+
+if units.NVIDIA_SMI_PATH is not None:
+    def get_ngpu_info() -> List[NGPU]:
+        """(`ONLY FOR VIDEOCARDS FROM NVIDIA`)"""
+        return [NGPU(**ngpu) for ngpu in Parser.get_nvidia_videocards()]
+
+    def get_ngpu_status(id: Optional[int]=None) -> Optional[Union[List[NGPUStatus], NGPUStatus]]:
+        """(`ONLY FOR VIDEOCARDS FROM NVIDIA`)"""
+        statuses = [NGPUStatus(**ngpus) for ngpus in Parser.get_nvidia_videocards_status()]
+        if id is not None:
+            for i in statuses:
+                if i.id == id:
+                    return i
+        else:
+            return statuses
