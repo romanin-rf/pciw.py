@@ -24,4 +24,3 @@ console.print(pciw.get_bios_info())
 
 console.rule("NVIDIA VIDEOCARDS AND STATUS")
 console.print(pciw.get_ngpu_info())
-console.print(pciw.get_ngpu_status())

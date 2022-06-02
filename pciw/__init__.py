@@ -5,8 +5,7 @@ from .pciw import \
     get_monitors_info, \
     get_motherboard_info, \
     get_bios_info, \
-    get_ngpu_info, \
-    get_ngpu_status
+    get_ngpu_info
 
 __name__ = "pciw.py"
-__version__ = "0.6.1"
+__version__ = "0.6.2"

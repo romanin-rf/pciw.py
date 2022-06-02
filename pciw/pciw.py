@@ -83,6 +83,14 @@ class GPU:
     availability: Optional[int]
 
 @dataclass
+class NGPUStatus:
+    memory_total: float
+    memory_used: float
+    memory_free: float
+    temperature: Temperature
+    fan_speed: int
+
+@dataclass
 class NGPU:
     name: str
     id: int
@@ -92,15 +100,7 @@ class NGPU:
     serial_number: Optional[str]
     display_active: Optional[str]
     display_mode: Optional[str]
-
-@dataclass
-class NGPUStatus:
-    id: int
-    memory_total: float
-    memory_used: float
-    memory_free: float
-    temperature: Temperature
-    fan_speed: int
+    status: NGPUStatus
 
 @dataclass
 class Monitor:
@@ -202,19 +202,9 @@ def get_bios_info() -> BIOS:
 @supporter.add_support(["Windows"])
 def get_ngpu_info() -> List[NGPU]:
     """Returns the `NGPU` dataclass, containing video card information (ONLY FOR NVIDIA VIDEO CARDS)"""
-    return [NGPU(**ngpu) for ngpu in Parser.get_nvidia_videocards()]
+    ngpus: List[NGPU] = []
+    for i in Parser.get_nvidia_videocards():
+        i["status"] = NGPUStatus(**i["status"])
+        ngpus.append(NGPU(**i))
+    return ngpus
 
-@supporter.add_support(["Windows"])
-def get_ngpu_status(id: Optional[int]=None) -> Union[List[NGPUStatus], Optional[NGPUStatus]]:
-    """Returns the `NGPUStatus` dataclass, containing data about the status of the video cards (ONLY FOR NVIDIA VIDEO CARDS)"""
-    statuses: List[NGPUStatus] = []
-    for i in Parser.get_nvidia_videocards_status():
-        i["temperature"] = Temperature(i["temperature"], __Ft(i["temperature"]))
-        statuses.append(NGPUStatus(**i))
-
-    if id is not None:
-        for i in statuses:
-            if i.id == id:
-                return i
-    else:
-        return statuses

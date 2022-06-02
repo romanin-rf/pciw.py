@@ -60,6 +60,15 @@ def request(
         req = subprocess.check_output(f"wmic {method} {treq} /format:{form}")
     return req.decode(errors="ignore")
 
+def request_nsmi(qgpu: List[str], form: List[str]) -> str:
+    return subprocess.check_output(
+        [
+            units.NVIDIA_SMI_PATH,
+            "--query-gpu={}".format(",".join(qgpu)),
+            "--format={}".format(",".join(form))
+        ]
+    ).decode(errors="ignore")
+
 # ! Функции определения
 def get_mff(code: int) -> str:
     return units.NT_TYPES.MEMORY_FORM_FACTOR[code]
@@ -151,14 +160,26 @@ def get_videocards() -> List[Dict[str, Any]]:
     return uld
 
 def get_nvidia_videocards() -> List[Dict[str, Any]]:
-    info, nvidia_videocards = Converter.from_csv(
-        subprocess.check_output(
+    info, nvidia_videocards = \
+    Converter.from_csv(
+        request_nsmi(
             [
-                units.NVIDIA_SMI_PATH,
-                "--query-gpu=index,uuid,utilization.gpu,driver_version,name,gpu_serial,display_active,display_mode",
-                "--format=csv,noheader,nounits"
-            ]
-        ).decode(errors="ignore"),
+                "index",
+                "uuid",
+                "utilization.gpu",
+                "driver_version",
+                "name",
+                "gpu_serial",
+                "display_active",
+                "display_mode",
+                "memory.total",
+                "memory.used",
+                "memory.free",
+                "temperature.gpu",
+                "fan.speed"
+            ],
+            ["csv", "noheader", "nounits"]
+        ), 
         ", ",
         "\r\n"
     ), []
@@ -166,41 +187,45 @@ def get_nvidia_videocards() -> List[Dict[str, Any]]:
         nvidia_videocards.append(
             {
                 "name": exists_key(4, i)[1],
-                "id": Converter.str_to_int(exists_key(0, i)[1]),
+                "id": Converter.str_to_int(
+                    exists_key(0, i)[1]
+                ),
                 "uuid": exists_key(1, i)[1],
-                "ugpu": tnvv(exists_key(2, i)[1]),
+                "ugpu": tnvv(
+                    exists_key(2, i)[1]
+                ),
                 "driver_version": exists_key(3, i)[1],
-                "serial_number": Converter.sn(tnvv(exists_key(5, i)[1])),
-                "display_active": tnvv(exists_key(6, i)[1]),
-                "display_mode": tnvv(exists_key(7, i)[1])
+                "serial_number": Converter.sn(
+                    tnvv(
+                        exists_key(5, i)[1]
+                    )
+                ),
+                "display_active": tnvv(
+                    exists_key(6, i)[1]
+                ),
+                "display_mode": tnvv(
+                    exists_key(7, i)[1]
+                ),
+                "status": {
+                    "memory_total": Converter.str_to_int(
+                        exists_key(8, i)[1]
+                    ),
+                    "memory_used": Converter.str_to_int(
+                        exists_key(9, i)[1]
+                    ),
+                    "memory_free": Converter.str_to_int(
+                        exists_key(10, i)[1]
+                    ),
+                    "temperature": Converter.str_to_int(
+                        exists_key(11, i)[1]
+                    ),
+                    "fan_speed": Converter.str_to_int(
+                        exists_key(12, i)[1]
+                    )
+                }
             }
         )
     return nvidia_videocards
-
-def get_nvidia_videocards_status() -> List[Dict[str, Any]]:
-    info, nvidia_videocards_status = Converter.from_csv(
-        subprocess.check_output(
-            [
-                units.NVIDIA_SMI_PATH,
-                "--query-gpu=index,memory.total,memory.used,memory.free,temperature.gpu,fan.speed",
-                "--format=csv,noheader,nounits"
-            ]
-        ).decode(errors="ignore"),
-        ", ",
-        "\r\n"
-    ), []
-    for i in info:
-        nvidia_videocards_status.append(
-            {
-                "id": Converter.str_to_int(exists_key(0, i)[1]),
-                "memory_total": Converter.str_to_float(exists_key(1, i)[1]),
-                "memory_used": Converter.str_to_float(exists_key(2, i)[1]),
-                "memory_free": Converter.str_to_float(exists_key(3, i)[1]),
-                "temperature": Converter.str_to_int(exists_key(4, i)[1]),
-                "fan_speed": Converter.str_to_int(exists_key(5, i)[1])
-            }
-        )
-    return nvidia_videocards_status
 
 def get_motherboard() -> Dict[str, Any]:
     info = Converter.value_to_dict(request(
