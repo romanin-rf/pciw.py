@@ -1,14 +1,14 @@
 import cpuinfo
 import screeninfo
 import subprocess
-import datetime
-from dateutil import parser
 from typing import Union, Any, List, Optional, Literal, Tuple, Dict
 # ! Локальные импорты
 try:
-    from . import units
-except:
     import units
+    import Converter
+except:
+    from . import units
+    from . import Converter
 
 # ! Функции
 def exists_key(
@@ -36,92 +36,6 @@ def startswiths(string: str, sl: List[str]) -> bool:
         if string.startswith(i):
             return True
     return False
-
-# ! Класс конвертации данных
-class Converter:
-    def value_to_dict(string: str) -> List[Dict[str, Optional[str]]]:
-        data: List[List[str]] = [
-            i.split("\r\r\n") for i in removes(
-                string\
-                    .replace("\r\r\n\r\r\n\r\r\n\r\r\n", "")\
-                    .split("\r\r\n\r\r\n"),
-                [""]
-            )
-        ]
-        do = []
-        for table in data:
-            d = {}
-            for line in table:
-                rd = line.split("=")
-                if rd[0].replace(" ", "") != "":
-                    d[rd[0]] = rd[1]\
-                        if (
-                            rd[0].replace(" ", "") != ""
-                        ) else None
-            do.append(d)
-        return do
-    
-    def str_to_bool(string: str) -> Optional[bool]:
-        string = string.lower().replace(" ", "")
-        if string == "true":
-            return True
-        elif string == "false":
-            return False
-    
-    def str_to_int(string: Optional[str]) -> Optional[int]:
-        if string is not None:
-            string = string.lower().replace(" ", "")
-            try:
-                return int(string)
-            except:
-                pass
-    
-    def str_to_float(string: Optional[str]) -> Optional[int]:
-        if string is not None:
-            string = string.lower().replace(" ", "")
-            try:
-                return float(string)
-            except:
-                pass
-    
-    def windate_to_datetime(string: str) -> Optional[datetime.datetime]:
-        try:
-            return parser.parse(
-                "{year}.{month}.{day} {hour}:{min}.{sec}"\
-                .format(
-                    year=string[0:4],
-                    month=string[4:6],
-                    day=string[6:8],
-                    hour=string[8:10],
-                    min=string[10:12],
-                    sec=string[12:14]
-                )
-            )
-        except:
-            pass
-    
-    def winlang_to_tuple(string: Union[List[str], str]) -> Optional[Union[List[Tuple[str, str, str]], Tuple[str, str, str]]]:
-        try:
-            if isinstance(string, list):
-                return [tuple(i.split("|")) for i in string]
-            elif isinstance(string, str):
-                return tuple(string.split("|"))
-        except:
-            pass
-    
-    def sn(string: Optional[str]) -> Optional[str]:
-        if string is not None:
-            if not startswiths(string, units.SERIAL_NUMBER_EXCEPTIONS):
-                return string
-    
-    def from_csv(data: str, dvalue: str, dline: str) -> List[List[str]]:
-        data_values = []
-        lines = removes(data.split(dline), [""])
-        for i in lines:
-            data_values.append(
-                i.split(dvalue)
-            )
-        return data_values
 
 # ! Функция запросов к WMIC
 def request(
