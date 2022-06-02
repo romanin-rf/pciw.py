@@ -1,12 +1,20 @@
 import datetime
 from dateutil import parser
-from typing import Union, Any, List, Optional, Literal, Tuple, Dict
+from typing import Union, Any, List, Optional, Tuple, Dict
 # ! Локальные импорты
 try:
     from . import units
 except:
     import units
 
+# ! Константы
+LINUX_BYTES_NAMES: Dict[str, int] = {
+    "KiB": 1024,
+    "MiB": 1048576,
+    "GiB": 1073741824
+}
+
+# ! Главные функции
 def exists_key(
     key: Union[str, int],
     data: Union[dict, list, tuple]
@@ -62,13 +70,15 @@ def str_to_bool(string: str) -> Optional[bool]:
     elif string == "false":
         return False
 
-def str_to_int(string: Optional[str]) -> Optional[int]:
+def str_to_int(string: Optional[Union[str, int]]) -> Optional[int]:
     if string is not None:
-        string = string.lower().replace(" ", "")
-        try:
-            return int(string)
-        except:
-            pass
+        if not isinstance(string, int):
+            string = string.lower().replace(" ", "")
+            try:
+                return int(string)
+            except:
+                pass
+        return string
 
 def str_to_float(string: Optional[str]) -> Optional[int]:
     if string is not None:
@@ -116,3 +126,13 @@ def from_csv(data: str, dvalue: str, dline: str) -> List[List[str]]:
             i.split(dvalue)
         )
     return data_values
+
+def lbytes(string: Optional[Union[str, int]]) -> Optional[int]:
+    if not isinstance(string, int):
+        if string is not None:
+            ls = string.split(' ')
+            try:
+                return int(ls[0]) * LINUX_BYTES_NAMES[ls[1]]
+            except:
+                pass
+    return string

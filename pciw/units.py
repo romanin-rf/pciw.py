@@ -9,7 +9,7 @@ SERIAL_NUMBER_EXCEPTIONS = [
 NVIDIA_VALUES_EXCEPTIONS = [
     "[Not Supported]"
 ]
-# ! Для проверки поддежки
+# ! Для проверки поддержки
 NVIDIA_SMI_PATH_SUPPORTED = {
     "Windows": "nsmi.exe"
 }

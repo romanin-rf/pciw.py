@@ -92,7 +92,7 @@ def get_cpu() -> Dict[str, Any]:
         "stepping": info["stepping"],
         "architecture": info["arch"],
         "bits": int(info["bits"]),
-        "frequency": info["hz_actual"][0] / 1000000000,
+        "frequency": round(info["hz_actual"][0] / 1e9, 1),
         "cores_count": info["count"],
         "cache": {
             "l2_size": exists_key("l2_cache_size", info)[1],

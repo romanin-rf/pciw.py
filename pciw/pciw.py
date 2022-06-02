@@ -49,9 +49,9 @@ class CPUCache:
 @dataclass
 class CPU:
     name: str
-    model: str
-    family: str
-    stepping: str
+    model: int
+    family: int
+    stepping: int
     architecture: str
     bits: int
     frequency: float
@@ -148,7 +148,7 @@ def __Ft(C: int) -> int:
     return int((C*(9/5))+32)
 
 # ! Открытые функции
-@supporter.add_support(["Windows"])
+@supporter.add_support(["Windows", "Linux"])
 def get_cpu_info() -> CPU:
     """Returns the `CPU` dataclass containing information about the CPU"""
     cpu_info = Parser.get_cpu()

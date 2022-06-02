@@ -9,4 +9,4 @@ from .pciw import \
     get_ngpu_status
 
 __name__ = "pciw.py"
-__version__ = "0.6"
+__version__ = "0.6.1"
