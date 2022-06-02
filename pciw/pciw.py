@@ -8,6 +8,17 @@ try:
 except:
     from . import SupportHandler as sh
 
+# ! Исключения
+class NvidiaSMIError(Exception):
+    def __init__(self, *args) -> None:
+        if len(args) != 0:
+            self.msg = " ".join([str(args) for i in args])
+        else:
+            self.msg = "NVIDIA-SMI couldn't find 'nvml.dll' library in your system"
+
+    def __str__(self) -> str:
+        return self.msg
+
 # ! Инициализация
 supporter = sh.Supported()
 
@@ -203,8 +214,12 @@ def get_bios_info() -> BIOS:
 def get_ngpu_info() -> List[NGPU]:
     """Returns the `NGPU` dataclass, containing video card information (ONLY FOR NVIDIA VIDEO CARDS)"""
     ngpus: List[NGPU] = []
-    for i in Parser.get_nvidia_videocards():
-        i["status"] = NGPUStatus(**i["status"])
-        ngpus.append(NGPU(**i))
+    try:
+        for i in Parser.get_nvidia_videocards():
+            i["status"]["temperature"] = Temperature(i["status"]["temperature"], __Ft(i["status"]["temperature"]))
+            i["status"] = NGPUStatus(**i["status"])
+            ngpus.append(NGPU(**i))
+    except Parser.subprocess.CalledProcessError:
+        raise NvidiaSMIError()
     return ngpus
 
