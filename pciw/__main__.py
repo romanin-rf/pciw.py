@@ -23,4 +23,9 @@ console.rule("BIOS INFO")
 console.print(pciw.get_bios_info())
 
 console.rule("NVIDIA VIDEOCARDS AND STATUS")
-console.print(pciw.get_ngpu_info())
+try:
+    console.print(pciw.get_ngpu_info())
+except pciw.NvidiaSMIError:
+    console.print("[red]Error[/]: [green]The NVIDIA driver is not installed![/]")
+else:
+    console.print_exception()
