@@ -28,10 +28,14 @@ setuptools.setup(
 	url="https://github.com/romanin-rf/pciw.py",
 	long_description=open(os.path.join(os.path.dirname(__file__), 'README.md')).read(),
 	long_description_content_type="text/markdown",
-	package_data={"pciw": globalizer("pciw"+os.sep+"data")},
+	package_data={
+        "pciw": globalizer(
+            os.path.join(os.path.dirname(__file__), "pciw", "data")
+        )
+    },
 	include_package_data=True,
 	author='ProgrammerFromParlament',
 	license='MIT',
-	install_requires=["screeninfo", "py-cpuinfo", "python-dateutil", "rich"],
-    setup_requires=["screeninfo", "py-cpuinfo", "python-dateutil", "rich"]
+	install_requires=["screeninfo", "py-cpuinfo", "python-dateutil", "rich", "enhanced-versioning"],
+    setup_requires=["screeninfo", "py-cpuinfo", "python-dateutil", "rich", "enhanced-versioning"]
 )

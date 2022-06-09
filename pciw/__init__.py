@@ -8,4 +8,4 @@ from .pciw import \
     get_ngpu_info
 
 __name__ = "pciw.py"
-__version__ = "0.6.5"
+__version__ = "0.6.5-fix"
