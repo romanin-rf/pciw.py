@@ -1,5 +1,6 @@
 import platform
 import datetime
+from enhanced_versioning import SemanticVersion, NonSemanticVersion
 from dataclasses import dataclass
 from typing import Optional, List, Tuple, Union
 # * Локальные импорт
@@ -10,6 +11,7 @@ except:
 
 # ! Исключения
 class NvidiaSMIError(Exception):
+    """Called if there is an error parsing information from NVIDIA-SMI, usually a problem in the absence of NVIDIA Corporation"""
     def __init__(self, *args) -> None:
         if len(args) != 0:
             self.msg = " ".join([str(args) for i in args])
@@ -86,7 +88,7 @@ class GPU:
     name: str
     model: str
     company: str
-    driver_version: str
+    driver_version: Optional[Union[SemanticVersion, NonSemanticVersion]]
     driver_date: datetime.datetime
     memory_capacity: int
     memory_type: Optional[str]
@@ -107,7 +109,7 @@ class NGPU:
     id: int
     uuid: str
     ugpu: Optional[str]
-    driver_version: Optional[str]
+    driver_version: Optional[Union[SemanticVersion, NonSemanticVersion]]
     serial_number: Optional[str]
     display_active: Optional[str]
     display_mode: Optional[str]
@@ -124,7 +126,7 @@ class Monitor:
 class Motherboard:
     name: str
     tag: str
-    version: str
+    version: Optional[Union[SemanticVersion, NonSemanticVersion]]
     product: str
     serial_number: Optional[str]
     manufacturer: str
@@ -147,15 +149,17 @@ class BIOS:
     name: str
     manufacturer: str
     release_date: datetime.datetime
-    languages: List[Language]
-    current_language: Language
+    languages: Optional[List[Language]]
+    current_language: Optional[Language]
     is_primary: Optional[bool]
     serial_number: Optional[str]
-    version: str
+    version: Optional[Union[SemanticVersion, NonSemanticVersion]]
     smbios: SMBIOS
+    characteristics: List[str]
 
 # ! Внутринние функции
 def __Ft(C: int) -> int:
+    """Celsius (С) to Fahrenheit (F)"""
     return int((C*(9/5))+32)
 
 # ! Открытые функции
@@ -170,17 +174,30 @@ def get_cpu_info() -> CPU:
     del cpu_info["cache"]
     return CPU(**cpu_info, cache=cache)
 
-@supporter.add_support(["Windows"])
+@supporter.add_support(["Windows"], [])
 def get_ram_info() -> List[RAMBank]:
     """Returns a `list` with `RAMBank` dataclasses containing information about each RAM die"""
     return [RAMBank(**bank) for bank in Parser.get_ram()]
 
-@supporter.add_support(["Windows"])
+@supporter.add_support(["Windows"], [])
 def get_gpu_info() -> List[GPU]:
     """Returns a `list` with `GPU` dataclasses containing information about each video card"""
-    return [GPU(**va) for va in Parser.get_videocards()]
+    gpus = []
+    for info in Parser.get_videocards():
+        if info["driver_version"] is not None:
+            try:
+                info["driver_version"] = SemanticVersion(info["driver_version"].replace(" ", ""))
+            except:
+                try:
+                    info["driver_version"] = NonSemanticVersion(info["driver_version"].replace(" ", ""))
+                except:
+                    pass
+        if info["availability"] is not None:
+            info["availability"] = info["availability"].upper()
+        gpus.append(GPU(**info))
+    return gpus
 
-@supporter.add_support(["Windows"])
+@supporter.add_support(["Windows"], [])
 def get_monitors_info() -> List[Monitor]:
     """Returns a `list` with `Monitor` dataclasses, containing information about each monitor"""
     return [Monitor(**monitor) for monitor in Parser.get_monitors()]
@@ -189,6 +206,15 @@ def get_monitors_info() -> List[Monitor]:
 def get_motherboard_info() -> Motherboard:
     """Returns the dataclass `Motherboard`, containing information about the motherboard"""
     info = Parser.get_motherboard()
+    if info["version"] is not None:
+        info["version"] = info["version"].replace(" ", "")
+        try:
+            info["version"] = SemanticVersion(info["version"])
+        except:
+            try:
+                info["version"] = NonSemanticVersion(info["version"])
+            except:
+                pass
     return Motherboard(**info)
 
 @supporter.add_support(["Windows"])
@@ -208,9 +234,18 @@ def get_bios_info() -> BIOS:
     except:
         info["languages"] = None
         info["current_language"] = None
+    if info["version"] is not None:
+        info["version"] = info["version"].replace(" ", "")
+        try:
+            info["version"] = SemanticVersion(info["version"])
+        except:
+            try:
+                info["version"] = NonSemanticVersion(info["version"])
+            except:
+                pass
     return BIOS(**info, smbios=smbios)
 
-@supporter.add_support(["Windows"])
+@supporter.add_support(["Windows"], [])
 def get_ngpu_info() -> List[NGPU]:
     """Returns the `NGPU` dataclass, containing video card information (ONLY FOR NVIDIA VIDEO CARDS)"""
     ngpus: List[NGPU] = []
@@ -218,6 +253,14 @@ def get_ngpu_info() -> List[NGPU]:
         for i in Parser.get_nvidia_videocards():
             i["status"]["temperature"] = Temperature(i["status"]["temperature"], __Ft(i["status"]["temperature"]))
             i["status"] = NGPUStatus(**i["status"])
+            if i["driver_version"] is not None:
+                try:
+                    i["driver_version"] = SemanticVersion(i["driver_version"].replace(" ", ""))
+                except:
+                    try:
+                        i["driver_version"] = NonSemanticVersion(i["driver_version"].replace(" ", ""))
+                    except:
+                        pass
             ngpus.append(NGPU(**i))
     except Parser.subprocess.CalledProcessError:
         raise NvidiaSMIError()

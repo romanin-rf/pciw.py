@@ -2,6 +2,7 @@ import cpuinfo
 import screeninfo
 import subprocess
 from typing import Union, Any, List, Optional, Literal, Tuple, Dict
+
 # ! Локальные импорты
 try:
     import units
@@ -11,7 +12,7 @@ except:
     from . import Converter
 
 # ! Функции
-def exists_key(
+def ek(
     key: Union[str, int],
     data: Union[dict, list, tuple]
 ) -> Tuple[bool, Optional[Any]]:
@@ -91,6 +92,9 @@ def tnvv(value: Optional[str]) -> str:
             return None
     return value
 
+def chrct(code: int) -> str:
+    return units.NT_TYPES.BIOS_CHARACTERISTICS[code]
+
 # ! Get-функции
 def get_cpu() -> Dict[str, Any]:
     info = cpuinfo.get_cpu_info()
@@ -104,8 +108,8 @@ def get_cpu() -> Dict[str, Any]:
         "frequency": round(info["hz_actual"][0] / 1e9, 1),
         "cores_count": info["count"],
         "cache": {
-            "l2_size": exists_key("l2_cache_size", info)[1],
-            "l3_size": exists_key("l3_cache_size", info)[1]
+            "l2_size": ek("l2_cache_size", info)[1],
+            "l3_size": ek("l3_cache_size", info)[1]
         },
         "flags": [i.upper() for i in info["flags"]]
     }
@@ -146,12 +150,12 @@ def get_videocards() -> List[Dict[str, Any]]:
     for i in ld:
         uld.append(
             {
-                "name": i["Name"],
-                "model": i["VideoProcessor"],
-                "company": i["AdapterCompatibility"],
-                "driver_version": i["DriverVersion"],
+                "name": ek("Name", i)[1],
+                "model": ek("VideoProcessor", i)[1],
+                "company": ek("AdapterCompatibility", i)[1],
+                "driver_version": ek("DriverVersion", i)[1],
                 "driver_date": Converter.windate_to_datetime(i["DriverDate"]),
-                "memory_capacity": Converter.str_to_int(i["AdapterRAM"]),
+                "memory_capacity": Converter.str_to_int(ek("AdapterRAM", i)[1]),
                 "memory_type": get_vmtype(Converter.str_to_int(i["VideoMemoryType"])),
                 "architecture": get_varch(Converter.str_to_int(i["VideoArchitecture"])),
                 "availability": get_vaval(Converter.str_to_int(i["Availability"]))
@@ -186,41 +190,41 @@ def get_nvidia_videocards() -> List[Dict[str, Any]]:
     for i in info:
         nvidia_videocards.append(
             {
-                "name": exists_key(4, i)[1],
+                "name": ek(4, i)[1],
                 "id": Converter.str_to_int(
-                    exists_key(0, i)[1]
+                    ek(0, i)[1]
                 ),
-                "uuid": exists_key(1, i)[1],
+                "uuid": ek(1, i)[1],
                 "ugpu": tnvv(
-                    exists_key(2, i)[1]
+                    ek(2, i)[1]
                 ),
-                "driver_version": exists_key(3, i)[1],
+                "driver_version": ek(3, i)[1],
                 "serial_number": Converter.sn(
                     tnvv(
-                        exists_key(5, i)[1]
+                        ek(5, i)[1]
                     )
                 ),
                 "display_active": tnvv(
-                    exists_key(6, i)[1]
+                    ek(6, i)[1]
                 ),
                 "display_mode": tnvv(
-                    exists_key(7, i)[1]
+                    ek(7, i)[1]
                 ),
                 "status": {
                     "memory_total": Converter.str_to_int(
-                        exists_key(8, i)[1]
+                        ek(8, i)[1]
                     ),
                     "memory_used": Converter.str_to_int(
-                        exists_key(9, i)[1]
+                        ek(9, i)[1]
                     ),
                     "memory_free": Converter.str_to_int(
-                        exists_key(10, i)[1]
+                        ek(10, i)[1]
                     ),
                     "temperature": Converter.str_to_int(
-                        exists_key(11, i)[1]
+                        ek(11, i)[1]
                     ),
                     "fan_speed": Converter.str_to_int(
-                        exists_key(12, i)[1]
+                        ek(12, i)[1]
                     )
                 }
             }
@@ -233,18 +237,32 @@ def get_motherboard() -> Dict[str, Any]:
         )
     )[0]
     return {
-        "name": info["Name"],
-        "tag": info["Tag"],
-        "version": info["Version"],
-        "product": info["Product"],
-        "serial_number": Converter.sn(info["SerialNumber"]),
-        "manufacturer": info["Manufacturer"],
-        "power_on": Converter.str_to_bool(info["PoweredOn"]),
-        "removable": Converter.str_to_bool(info["Removable"]),
-        "replaceable": Converter.str_to_bool(info["Replaceable"]),
-        "rdb": Converter.str_to_bool(info["RequiresDaughterBoard"]),
-        "hosting_board": Converter.str_to_bool(info["HostingBoard"]),
-        "hot_swappable": Converter.str_to_bool(info["HotSwappable"])
+        "name": ek("Name", info)[1],
+        "tag": ek("Tag", info)[1],
+        "version": ek("Version", info)[1],
+        "product": ek("Product", info)[1],
+        "serial_number": Converter.sn(
+            ek("SerialNumber", info)[1]
+        ),
+        "manufacturer": ek("Manufacturer", info)[1],
+        "power_on": Converter.str_to_bool(
+            ek("PoweredOn", info)[1]
+        ),
+        "removable": Converter.str_to_bool(
+            ek("Removable", info)[1]
+        ),
+        "replaceable": Converter.str_to_bool(
+            ek("Replaceable", info)[1]
+        ),
+        "rdb": Converter.str_to_bool(
+            ek("RequiresDaughterBoard", info)[1]
+        ),
+        "hosting_board": Converter.str_to_bool(
+            ek("HostingBoard", info)[1]
+        ),
+        "hot_swappable": Converter.str_to_bool(
+            ek("HotSwappable", info)[1]
+        )
     }
 
 def get_bios() -> Dict[str, Any]:
@@ -256,18 +274,32 @@ def get_bios() -> Dict[str, Any]:
         langs = Converter.winlang_to_tuple(list(eval(info["ListOfLanguages"])))
         clang = Converter.winlang_to_tuple(info["CurrentLanguage"])
     except:
-        pass
+        langs, clang = [], None
+    try:
+        characteristics = list(set([chrct(i).upper() for i in eval(ek("BiosCharacteristics", info)[1])]))
+    except:
+        characteristics = []
+    
     return {
-        "name": info["Name"],
-        "manufacturer": info["Manufacturer"],
-        "release_date": Converter.windate_to_datetime(info["ReleaseDate"]),
+        "name": ek("Name", info)[1],
+        "manufacturer": ek("Manufacturer", info)[1],
+        "release_date": Converter.windate_to_datetime(
+            ek("ReleaseDate", info)[1]
+        ),
         "languages": langs,
         "current_language": clang,
-        "is_primary": Converter.str_to_bool(info["CurrentLanguage"]),
-        "serial_number": Converter.sn(info["SerialNumber"]),
-        "version": info["Version"],
-        "smbios_version": info["SMBIOSBIOSVersion"],
-        "smbios_major_version": info["SMBIOSMajorVersion"],
-        "smbios_minor_version": info["SMBIOSMinorVersion"],
-        "smbios_present": Converter.str_to_bool(info["SMBIOSPresent"])
+        "is_primary": Converter.str_to_bool(
+            ek("PrimaryBIOS", info)[1]
+        ),
+        "serial_number": Converter.sn(
+            ek("SerialNumber", info)[1]
+        ),
+        "version": ek("Version", info)[1],
+        "smbios_version": ek("SMBIOSBIOSVersion", info)[1],
+        "smbios_major_version": ek("SMBIOSMajorVersion", info)[1],
+        "smbios_minor_version": ek("SMBIOSMinorVersion", info)[1],
+        "smbios_present": Converter.str_to_bool(
+            ek("SMBIOSPresent", info)[1]
+        ),
+        "characteristics": characteristics
     }

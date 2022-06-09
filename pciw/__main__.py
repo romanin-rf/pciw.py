@@ -1,8 +1,10 @@
 from . import pciw
 from rich.console import Console
 
+# * Иницализация
 console = Console()
 
+# * Проверка
 console.print(f"[yellow]Location of this file[/] [red]->[/] [green]{__file__}[/]")
 console.rule("CPU INFO")
 console.print(pciw.get_cpu_info())
@@ -27,5 +29,3 @@ try:
     console.print(pciw.get_ngpu_info())
 except pciw.NvidiaSMIError:
     console.print("[red]Error[/]: [green]The NVIDIA driver is not installed![/]")
-else:
-    console.print_exception()

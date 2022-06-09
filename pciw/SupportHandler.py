@@ -1,31 +1,8 @@
 import platform
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 # ! Константы
 SYSTEM: str = platform.system()
-
-# ! Исключения
-class MethodIsNotSupported(Exception):
-    def __init__(self, *args, **kwargs) -> None:
-        """Called if the method is not supported by the OS"""
-        if args.__len__() != 0:
-            self.msg = " ".join([str(i) for i in args])
-        else:
-            if len(kwargs) == 0:
-                self.msg = "This method is not supported on your system"
-            else:
-                if "method" in kwargs.keys():
-                    self.msg = "The '%s' method is not supported by your operating system" % kwargs["method"].__name__
-                else:
-                    self.msg = "This method is not supported on your system"
-    
-    def __str__(self) -> str:
-        return self.msg
-    
-    def __repr__(self) -> str:
-        return "MethodIsNotSupported: {}".format(
-            self.__str__()
-        )
 
 # ! Главный класс
 class Supported:
@@ -42,16 +19,16 @@ class Supported:
                 return False
         return True
 
-    def add_support(self, supported: List[str]):
+    def add_support(self, supported: List[str], default_return: Optional[Any]=None) -> None:
         def adder(method):
             self.__add_method(method, supported)
-            def wrapper(*args):
+            def wrapper(*args, **kwargs):
                 if self.__by_supported(method):
                     if len(args) != 0:
-                        return method(*args)
+                        return method(*args, **kwargs)
                     else:
                         return method()
                 else:
-                    raise MethodIsNotSupported(method=method)
+                    return default_return
             return wrapper
         return adder

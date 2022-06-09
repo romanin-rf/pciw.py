@@ -18,10 +18,10 @@ def get_cpu() -> Dict[str, Any]:
         "frequency": round(info["hz_actual"][0] / 1e9, 1),
         "cores_count": info["count"],
         "cache": {
-            "l2_size": Converter.lbytes(
+            "l2_size": Converter.linux_bytes(
                 Converter.exists_key("l2_cache_size", info)[1]
             ),
-            "l3_size": Converter.lbytes(
+            "l3_size": Converter.linux_bytes(
                 Converter.exists_key("l3_cache_size", info)[1]
             )
         },

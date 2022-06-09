@@ -127,7 +127,7 @@ def from_csv(data: str, dvalue: str, dline: str) -> List[List[str]]:
         )
     return data_values
 
-def lbytes(string: Optional[Union[str, int]]) -> Optional[int]:
+def linux_bytes(string: Optional[Union[str, int]]) -> Optional[int]:
     if not isinstance(string, int):
         if string is not None:
             ls = string.split(' ')
