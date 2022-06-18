@@ -38,6 +38,12 @@ def startswiths(string: str, sl: List[str]) -> bool:
             return True
     return False
 
+def spliter(string: Optional[str], char: Any) -> List[str]:
+    try:
+        return string.split(char)
+    except:
+        pass
+
 # ! Функция запросов к WMIC
 def request(
     method: str,
@@ -303,3 +309,18 @@ def get_bios() -> Dict[str, Any]:
         ),
         "characteristics": characteristics
     }
+
+def get_sound_device() -> List[Dict[str, Any]]:
+    info, sds = Converter.value_to_dict(request("SOUNDDEV", "LIST", "FULL")), []
+    for i in info:
+        sds.append(
+            {   
+                "name": ek("Name", i)[1],
+                "product_name": ek("ProductName", i)[1],
+                "manufacturer": ek("Manufacturer", i)[1],
+                "device_ids": spliter(ek("DeviceID", i)[1], ";"),
+                "pnp_device_ids": spliter(ek("PNPDeviceID", i)[1], ";"),
+                "pms": Converter.str_to_bool(ek("PowerManagementSupported", i)[1])
+            }
+        )
+    return sds

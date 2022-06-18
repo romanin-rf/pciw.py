@@ -1,5 +1,5 @@
 import platform
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Literal, Optional
 
 # ! Константы
 SYSTEM: str = platform.system()
@@ -19,15 +19,30 @@ class Supported:
                 return False
         return True
 
-    def add_support(self, supported: List[str], default_return: Optional[Any]=None) -> None:
+    def add_support(
+        self,
+        supported: List[str],
+        default_return: Optional[Any]=None,
+        errors: Optional[Literal["ignore", "view"]]=None
+    ) -> Any:
+        errors = errors or "ignore"
         def adder(method):
             self.__add_method(method, supported)
             def wrapper(*args, **kwargs):
                 if self.__by_supported(method):
-                    if len(args) != 0:
-                        return method(*args, **kwargs)
-                    else:
-                        return method()
+                    if errors == "ignore":
+                        try:
+                            if len(args) != 0:
+                                return method(*args, **kwargs)
+                            else:
+                                return method()
+                        except:
+                            return default_return
+                    elif errors == "view":
+                        if len(args) != 0:
+                            return method(*args, **kwargs)
+                        else:
+                            return method()
                 else:
                     return default_return
             return wrapper

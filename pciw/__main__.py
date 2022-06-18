@@ -29,3 +29,6 @@ try:
     console.print(pciw.get_ngpu_info())
 except pciw.NvidiaSMIError:
     console.print("[red]Error[/]: [green]The NVIDIA driver is not installed![/]")
+
+console.rule("SOUND DEVICES")
+console.print(pciw.get_sound_device_info())

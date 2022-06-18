@@ -157,6 +157,15 @@ class BIOS:
     smbios: SMBIOS
     characteristics: List[str]
 
+@dataclass
+class SoundDevice:
+    name: str
+    product_name: str
+    manufacturer: str
+    device_ids: List[str]
+    pnp_device_ids: List[str]
+    pms: bool
+
 # ! Внутринние функции
 def __Ft(C: int) -> int:
     """Celsius (С) to Fahrenheit (F)"""
@@ -266,3 +275,6 @@ def get_ngpu_info() -> List[NGPU]:
         raise NvidiaSMIError()
     return ngpus
 
+@supporter.add_support(["Windows"], [], errors="view")
+def get_sound_device_info() -> List[SoundDevice]:
+    return [SoundDevice(**i) for i in Parser.get_sound_device()]

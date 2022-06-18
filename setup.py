@@ -2,7 +2,7 @@ import os
 import setuptools
 import pciw
 
-# Функция получения полных путей к папкам и подпапкам
+# * Функция получения полных путей к файлам в папках и подпапках
 def globalizer(dirpath: str) -> list:
     files = []
     folder_abspath = os.path.abspath(dirpath)
@@ -18,6 +18,7 @@ def globalizer(dirpath: str) -> list:
         files.append(folder_abspath)
     return files
 
+# * Ну, setup
 setuptools.setup(
 	name=pciw.__name__,
 	version=pciw.__version__,

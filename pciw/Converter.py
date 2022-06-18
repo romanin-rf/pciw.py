@@ -61,6 +61,10 @@ def value_to_dict(string: str) -> List[Dict[str, Optional[str]]]:
                         rd[0].replace(" ", "") != ""
                     ) else None
         do.append(d)
+    for idx, item in enumerate(do):
+        for key in item.keys():
+            if item[key].replace(" ", "") == "":
+                do[idx][key] = None
     return do
 
 def str_to_bool(string: str) -> Optional[bool]:
