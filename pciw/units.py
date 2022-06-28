@@ -4,7 +4,8 @@ import platform
 # ! Для функций
 SERIAL_NUMBER_EXCEPTIONS = [
     "To be filled",
-    "Default"
+    "Default",
+    "N/A"
 ]
 NVIDIA_VALUES_EXCEPTIONS = [
     "[Not Supported]"

@@ -3,6 +3,7 @@ import screeninfo
 import subprocess
 from typing import Union, Any, List, Optional, Literal, Tuple, Dict
 
+
 # ! Локальные импорты
 try:
     import units
@@ -75,6 +76,20 @@ def request_nsmi(qgpu: List[str], form: List[str]) -> str:
             "--format={}".format(",".join(form))
         ]
     ).decode(errors="ignore")
+
+def request_nsmi2(qgpu: List[str]) -> List[Dict[str, Any]]:
+    data = []
+    try:
+        from pynvml.smi import nvidia_smi
+        nsmi = nvidia_smi.getInstance()
+        gpus = nsmi.DeviceQuery(",".join(qgpu))
+        for i in gpus["gpu"]:
+            data.append(
+                {**i, "driver_version": gpus["driver_version"]}
+            )
+    except:
+        pass
+    return data
 
 # ! Функции определения
 def get_mff(code: int) -> str:
@@ -169,10 +184,10 @@ def get_videocards() -> List[Dict[str, Any]]:
         )
     return uld
 
-def get_nvidia_videocards() -> List[Dict[str, Any]]:
-    info, nvidia_videocards = \
-    Converter.from_csv(
-        request_nsmi(
+def get_nvidia_videocards2() -> List[Dict[str, Any]]:
+    nvidia_videocards = []
+    try:
+        nvgpus = request_nsmi2(
             [
                 "index",
                 "uuid",
@@ -187,55 +202,114 @@ def get_nvidia_videocards() -> List[Dict[str, Any]]:
                 "memory.free",
                 "temperature.gpu",
                 "fan.speed"
-            ],
-            ["csv", "noheader", "nounits"]
-        ), 
-        ", ",
-        "\r\n"
-    ), []
-    for i in info:
-        nvidia_videocards.append(
-            {
-                "name": ek(4, i)[1],
-                "id": Converter.str_to_int(
-                    ek(0, i)[1]
-                ),
-                "uuid": ek(1, i)[1],
-                "ugpu": tnvv(
-                    ek(2, i)[1]
-                ),
-                "driver_version": ek(3, i)[1],
-                "serial_number": Converter.sn(
-                    tnvv(
-                        ek(5, i)[1]
-                    )
-                ),
-                "display_active": tnvv(
-                    ek(6, i)[1]
-                ),
-                "display_mode": tnvv(
-                    ek(7, i)[1]
-                ),
-                "status": {
-                    "memory_total": Converter.str_to_int(
-                        ek(8, i)[1]
-                    ),
-                    "memory_used": Converter.str_to_int(
-                        ek(9, i)[1]
-                    ),
-                    "memory_free": Converter.str_to_int(
-                        ek(10, i)[1]
-                    ),
-                    "temperature": Converter.str_to_int(
-                        ek(11, i)[1]
-                    ),
-                    "fan_speed": Converter.str_to_int(
-                        ek(12, i)[1]
-                    )
-                }
-            }
+            ]
         )
+        for idx, nvgpu in enumerate(nvgpus):
+            memory_usage = ek("fb_memory_usage", nvgpu)[1]
+            nvidia_videocards.append(
+                {
+                    "name": ek("product_name", nvgpu)[1],
+                    "id": idx,
+                    "uuid": ek("uuid", nvgpu)[1],
+                    "ugpu": ek(
+                        "utilization",
+                        ek("gpu_util", nvgpu)[1]
+                    )[1],
+                    "driver_version": ek("driver_version", nvgpu)[1],
+                    "serial_number": Converter.sn(
+                        ek("serial", nvgpu)[1]
+                    ),
+                    "display_active": True if (ek("display_active", nvgpu)[1] == "Enabled") else False,
+                    "display_mode": True if (ek("display_mode", nvgpu)[1] == "Enabled") else False,
+                    "status": {
+                        "memory_total": ek("total", memory_usage)[1],
+                        "memory_used": ek("used", memory_usage)[1],
+                        "memory_free": ek("free", memory_usage)[1],
+                        "temperature": ek(
+                            "gpu_temp",
+                            ek("temperature", nvgpu)[1]
+                        )[1],
+                        "fan_speed": ek("fan_speed", nvgpu)[1]
+                    }
+                }
+            )
+    except:
+        pass
+
     return nvidia_videocards
+
+def get_nvidia_videocards() -> List[Dict[str, Any]]:
+    nvidia_videocards = []
+    try:
+        info = \
+        Converter.from_csv(
+            request_nsmi(
+                [
+                    "index",
+                    "uuid",
+                    "utilization.gpu",
+                    "driver_version",
+                    "name",
+                    "gpu_serial",
+                    "display_active",
+                    "display_mode",
+                    "memory.total",
+                    "memory.used",
+                    "memory.free",
+                    "temperature.gpu",
+                    "fan.speed"
+                ],
+                ["csv", "noheader", "nounits"]
+            ), 
+            ", ",
+            "\r\n"
+        )
+        for i in info:
+            nvidia_videocards.append(
+                {
+                    "name": ek(4, i)[1],
+                    "id": Converter.str_to_int(
+                        ek(0, i)[1]
+                    ),
+                    "uuid": ek(1, i)[1],
+                    "ugpu": tnvv(
+                        ek(2, i)[1]
+                    ),
+                    "driver_version": ek(3, i)[1],
+                    "serial_number": Converter.sn(
+                        tnvv(
+                            ek(5, i)[1]
+                        )
+                    ),
+                    "display_active": tnvv(
+                        ek(6, i)[1]
+                    ),
+                    "display_mode": tnvv(
+                        ek(7, i)[1]
+                    ),
+                    "status": {
+                        "memory_total": Converter.str_to_int(
+                            ek(8, i)[1]
+                        ),
+                        "memory_used": Converter.str_to_int(
+                            ek(9, i)[1]
+                        ),
+                        "memory_free": Converter.str_to_int(
+                            ek(10, i)[1]
+                        ),
+                        "temperature": Converter.str_to_int(
+                            ek(11, i)[1]
+                        ),
+                        "fan_speed": Converter.str_to_int(
+                            ek(12, i)[1]
+                        )
+                    }
+                }
+            )
+    except:
+        pass
+    if len(nvidia_videocards) == 0:
+        return get_nvidia_videocards2()
 
 def get_motherboard() -> Dict[str, Any]:
     info = Converter.value_to_dict(request(
