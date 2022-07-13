@@ -97,6 +97,7 @@ class GPU:
 
 @dataclass
 class NGPUStatus:
+    utilization: Optional[int]
     memory_total: float
     memory_used: float
     memory_free: float
@@ -108,7 +109,6 @@ class NGPU:
     name: str
     id: int
     uuid: str
-    ugpu: Optional[str]
     driver_version: Optional[Union[SemanticVersion, NonSemanticVersion]]
     serial_number: Optional[str]
     display_active: Optional[str]

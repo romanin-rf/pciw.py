@@ -211,10 +211,6 @@ def get_nvidia_videocards2() -> List[Dict[str, Any]]:
                     "name": ek("product_name", nvgpu)[1],
                     "id": idx,
                     "uuid": ek("uuid", nvgpu)[1],
-                    "ugpu": ek(
-                        "utilization",
-                        ek("gpu_util", nvgpu)[1]
-                    )[1],
                     "driver_version": ek("driver_version", nvgpu)[1],
                     "serial_number": Converter.sn(
                         ek("serial", nvgpu)[1]
@@ -222,6 +218,10 @@ def get_nvidia_videocards2() -> List[Dict[str, Any]]:
                     "display_active": True if (ek("display_active", nvgpu)[1] == "Enabled") else False,
                     "display_mode": True if (ek("display_mode", nvgpu)[1] == "Enabled") else False,
                     "status": {
+                        "utilization": ek(
+                            "utilization",
+                            ek("gpu_util", nvgpu)[1]
+                        )[1],
                         "memory_total": ek("total", memory_usage)[1],
                         "memory_used": ek("used", memory_usage)[1],
                         "memory_free": ek("free", memory_usage)[1],
@@ -272,9 +272,6 @@ def get_nvidia_videocards() -> List[Dict[str, Any]]:
                         ek(0, i)[1]
                     ),
                     "uuid": ek(1, i)[1],
-                    "ugpu": tnvv(
-                        ek(2, i)[1]
-                    ),
                     "driver_version": ek(3, i)[1],
                     "serial_number": Converter.sn(
                         tnvv(
@@ -288,6 +285,11 @@ def get_nvidia_videocards() -> List[Dict[str, Any]]:
                         ek(7, i)[1]
                     ),
                     "status": {
+                        "utilization": Converter.str_to_int(
+                            tnvv(
+                                ek(2, i)[1]
+                            )
+                        ),
                         "memory_total": Converter.str_to_int(
                             ek(8, i)[1]
                         ),
@@ -306,6 +308,7 @@ def get_nvidia_videocards() -> List[Dict[str, Any]]:
                     }
                 }
             )
+        return nvidia_videocards
     except:
         pass
     if len(nvidia_videocards) == 0:
