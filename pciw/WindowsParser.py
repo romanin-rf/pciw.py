@@ -3,7 +3,6 @@ import screeninfo
 import subprocess
 from typing import Union, Any, List, Optional, Literal, Tuple, Dict
 
-
 # ! Локальные импорты
 try:
     import units
@@ -28,10 +27,11 @@ def removes(l: list, ldv: list) -> list:
             l.remove(value)
     return l
 
-def replaces(s: str, d: Dict[str, str]) -> str:
-    for i in d.items():
-        s = s.replace(i[0], i[1])
-    return s
+def replaces(s: Optional[str], d: Dict[str, str]) -> Optional[str]:
+    if s != None:
+        for i in d.items():
+            s = s.replace(i[0], i[1])
+        return s
 
 def startswiths(string: str, sl: List[str]) -> bool:
     for i in sl:
@@ -116,6 +116,13 @@ def tnvv(value: Optional[str]) -> str:
 def chrct(code: int) -> str:
     return units.NT_TYPES.BIOS_CHARACTERISTICS[code]
 
+def get_nv_actiovitions(code: Optional[str]) -> Optional[bool]:
+    if code is not None:
+        if code == "Enabled":
+            return True
+        elif code == "Disabled":
+            return False
+
 # ! Get-функции
 def get_cpu() -> Dict[str, Any]:
     info = cpuinfo.get_cpu_info()
@@ -140,14 +147,33 @@ def get_ram() -> List[Dict[str, Any]]:
     for i in ld:
         uld.append(
             {
-                "device_location": i["DeviceLocator"],
-                "form_factor": get_mff(Converter.str_to_int(i["FormFactor"])),
-                "type": get_mtype(Converter.str_to_int(i["MemoryType"])),
-                "serial_number": Converter.sn(i["SerialNumber"]),
-                "part_number": i["PartNumber"].replace(" ", ""),
-                "capacity": Converter.str_to_int(i["Capacity"]),
-                "frequency": Converter.str_to_int(i["Speed"]),
-                "data_width": Converter.str_to_int(i["DataWidth"])
+                "device_location": ek("DeviceLocator", i),
+                "form_factor": get_mff(
+                    Converter.str_to_int(
+                        ek("FormFactor", i)[1]
+                    )
+                ),
+                "type": get_mtype(
+                    Converter.str_to_int(
+                        ek("MemoryType", i)[1]
+                    )
+                ),
+                "serial_number": Converter.sn(
+                    ek("SerialNumber", i)[1]
+                ),
+                "part_number": replaces(
+                    ek("PartNumber", i)[1],
+                    {" ": ""}
+                ),
+                "capacity": Converter.str_to_int(
+                    ek("Capacity", i)[1]
+                ),
+                "frequency": Converter.str_to_int(
+                    ek("Speed", i)[1]
+                ),
+                "data_width": Converter.str_to_int(
+                    ek("DataWidth", i)[1]
+                )
             }
         )
     return uld
@@ -175,11 +201,27 @@ def get_videocards() -> List[Dict[str, Any]]:
                 "model": ek("VideoProcessor", i)[1],
                 "company": ek("AdapterCompatibility", i)[1],
                 "driver_version": ek("DriverVersion", i)[1],
-                "driver_date": Converter.windate_to_datetime(i["DriverDate"]),
-                "memory_capacity": Converter.str_to_int(ek("AdapterRAM", i)[1]),
-                "memory_type": get_vmtype(Converter.str_to_int(i["VideoMemoryType"])),
-                "architecture": get_varch(Converter.str_to_int(i["VideoArchitecture"])),
-                "availability": get_vaval(Converter.str_to_int(i["Availability"]))
+                "driver_date": Converter.windate_to_datetime(
+                    ek("DriverDate", i)[1]
+                ),
+                "memory_capacity": Converter.str_to_int(
+                    ek("AdapterRAM", i)[1]
+                ),
+                "memory_type": get_vmtype(
+                    Converter.str_to_int(
+                        ek("VideoMemoryType", i)[1]
+                    )
+                ),
+                "architecture": get_varch(
+                    Converter.str_to_int(
+                        ek("VideoArchitecture", i)[1]
+                    )
+                ),
+                "availability": get_vaval(
+                    Converter.str_to_int(
+                        ek("Availability", i)[1]
+                    )
+                )
             }
         )
     return uld
@@ -215,8 +257,12 @@ def get_nvidia_videocards2() -> List[Dict[str, Any]]:
                     "serial_number": Converter.sn(
                         ek("serial", nvgpu)[1]
                     ),
-                    "display_active": True if (ek("display_active", nvgpu)[1] == "Enabled") else False,
-                    "display_mode": True if (ek("display_mode", nvgpu)[1] == "Enabled") else False,
+                    "display_active": get_nv_actiovitions(
+                        ek("display_active", nvgpu)[1]
+                    ),
+                    "display_mode": get_nv_actiovitions(
+                        ek("display_mode", nvgpu)[1]
+                    ),
                     "status": {
                         "utilization": ek(
                             "utilization",
