@@ -147,7 +147,7 @@ def get_ram() -> List[Dict[str, Any]]:
     for i in ld:
         uld.append(
             {
-                "device_location": ek("DeviceLocator", i),
+                "device_location": ek("DeviceLocator", i)[1],
                 "form_factor": get_mff(
                     Converter.str_to_int(
                         ek("FormFactor", i)[1]

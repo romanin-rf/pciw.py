@@ -9,4 +9,4 @@ from .pciw import \
     get_sound_device_info
 
 __name__ = "pciw.py"
-__version__ = "0.7-f1"
+__version__ = "0.7-f2"
