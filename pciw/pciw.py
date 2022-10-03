@@ -56,8 +56,8 @@ class Language:
 # ! Dataclasses Types Classes
 @dataclass
 class CPUCache:
-    l2_size: Optional[int]
-    l3_size: Optional[int]
+    l2_size: int
+    l3_size: int
 
 @dataclass
 class CPU:
@@ -75,9 +75,9 @@ class CPU:
 @dataclass
 class RAMBank:
     device_location: str
-    form_factor: Optional[str]
+    form_factor: str
     type: str
-    serial_number: Optional[str]
+    serial_number: str
     part_number: str
     capacity: int
     frequency: int
@@ -88,16 +88,16 @@ class GPU:
     name: str
     model: str
     company: str
-    driver_version: Optional[Union[SemanticVersion, NonSemanticVersion]]
+    driver_version: Union[SemanticVersion, NonSemanticVersion]
     driver_date: datetime.datetime
     memory_capacity: int
-    memory_type: Optional[str]
-    architecture: Optional[str]
-    availability: Optional[int]
+    memory_type: str
+    architecture: str
+    availability: int
 
 @dataclass
 class NGPUStatus:
-    utilization: Optional[int]
+    utilization: int
     memory_total: float
     memory_used: float
     memory_free: float
@@ -109,10 +109,10 @@ class NGPU:
     name: str
     id: int
     uuid: str
-    driver_version: Optional[Union[SemanticVersion, NonSemanticVersion]]
-    serial_number: Optional[str]
-    display_active: Optional[str]
-    display_mode: Optional[str]
+    driver_version: Union[SemanticVersion, NonSemanticVersion]
+    serial_number: str
+    display_active: str
+    display_mode: str
     status: NGPUStatus
 
 @dataclass
@@ -142,18 +142,18 @@ class SMBIOS:
     version: str
     major_version: str
     minor_version: str
-    present: Optional[bool]
+    present: bool
 
 @dataclass
 class BIOS:
     name: str
     manufacturer: str
     release_date: datetime.datetime
-    languages: Optional[List[Language]]
-    current_language: Optional[Language]
-    is_primary: Optional[bool]
-    serial_number: Optional[str]
-    version: Optional[Union[SemanticVersion, NonSemanticVersion]]
+    languages: List[Language]
+    current_language: Language
+    is_primary: bool
+    serial_number: str
+    version: Union[SemanticVersion, NonSemanticVersion]
     smbios: SMBIOS
     characteristics: List[str]
 

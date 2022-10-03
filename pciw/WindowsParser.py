@@ -275,7 +275,7 @@ def get_nvidia_videocards2() -> List[Dict[str, Any]]:
                             "gpu_temp",
                             ek("temperature", nvgpu)[1]
                         )[1],
-                        "fan_speed": ek("fan_speed", nvgpu)[1]
+                        "fan_speed": None if ek("fan_speed", nvgpu)[1] == "N/A" else ek("fan_speed", nvgpu)[1]
                     }
                 }
             )
