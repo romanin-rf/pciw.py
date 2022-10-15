@@ -142,6 +142,25 @@ def get_cpu() -> Dict[str, Any]:
         "flags": [i.upper() for i in info["flags"]]
     }
 
+def get_cpu_status() -> Dict[str, List[Dict[str, Any]]]:
+    d = Converter.t_cpu_data_to_dict(subprocess.check_output(units.T_CPU_PATH, stdin=subprocess.PIPE).decode(errors="ignore"))
+    dd, cc = {"cores": []}, 1
+    dd["package_temperature"] = d["cpu"]["temperature"]["package"]
+    dd["total_load"] = d["cpu"]["load"]["total"]
+    for i in d["cpu"]["clock"]:
+        if isinstance(i, int):
+            cc += 1
+    for _ in range(1, cc):
+        dd["cores"].append(
+            {
+                "index": _,
+                "load": d["cpu"]["load"][_],
+                "temperature": d["cpu"]["temperature"][_],
+                "clock": d["cpu"]["clock"][_]
+            }
+        )
+    return dd
+
 def get_ram() -> List[Dict[str, Any]]:
     ld, uld = Converter.value_to_dict(request("MEMORYCHIP")), []
     for i in ld:

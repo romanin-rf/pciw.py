@@ -1,5 +1,6 @@
 import os
 import platform
+from .Converter import exists_key
 
 # ! Для функций
 SERIAL_NUMBER_EXCEPTIONS = [
@@ -10,14 +11,11 @@ SERIAL_NUMBER_EXCEPTIONS = [
 NVIDIA_VALUES_EXCEPTIONS = [
     "[Not Supported]"
 ]
-# ! Для проверки поддержки
-NVIDIA_SMI_PATH_SUPPORTED = {
-    "Windows": "nsmi.exe"
-}
-try:
-    NVIDIA_SMI_PATH = os.path.join(os.path.dirname(__file__), "data", NVIDIA_SMI_PATH_SUPPORTED[platform.system()])
-except:
-    NVIDIA_SMI_PATH = None
+# ! Работа с путями
+NVIDIA_SMI_PATH_SUPPORTED = {"Windows": os.path.join(os.path.dirname(__file__), "data\\nsmi\\Windows\\nsmi.exe")}
+NVIDIA_SMI_PATH: str = exists_key(platform.system(), NVIDIA_SMI_PATH_SUPPORTED)[1]
+T_CPU_PATH_SUPPORTED = {"Windows": os.path.join(os.path.dirname(__file__), "data\\t_cpu\\Windows\\t_cpu.exe")}
+T_CPU_PATH: str = exists_key(platform.system(), T_CPU_PATH_SUPPORTED)[1]
 # ! Для определения типа
 class NT_TYPES:
     MEMORY_TYPE = [

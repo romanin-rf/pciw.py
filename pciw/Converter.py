@@ -84,9 +84,9 @@ def str_to_int(string: Optional[Union[str, int]]) -> Optional[int]:
                 pass
         return string
 
-def str_to_float(string: Optional[str]) -> Optional[int]:
+def str_to_float(string: Optional[str]) -> Optional[float]:
     if string is not None:
-        string = string.lower().replace(" ", "")
+        string = replaces(string.lower(), {" ": "", ",": "."})
         try:
             return float(string)
         except:
@@ -130,6 +130,32 @@ def from_csv(data: str, dvalue: str, dline: str) -> List[List[str]]:
             i.split(dvalue)
         )
     return data_values
+
+def t_cpu_data_to_dict(s: str) -> Dict[str, Dict[str, Dict[Any, Any]]]:
+    data = {}
+    for i in removes(s.split("\r\n"), [""]):
+        i: str
+        d = [i.lower() for i in i.split(":")]
+        # ! ДОЛПИСАТЬ ПАРСИНГ
+        if d[0] not in data:
+            data[d[0]] = {}
+        if d[2] not in data[d[0]]:
+            data[d[0]][d[2]] = {}
+        
+        d[3] = d[3] if (d[3] not in [""]) else None
+
+        if d[0] == "cpu":
+            try:
+                if d[2] == "temperature":
+                    data[d[0]][d[2]][int(d[1][-1:])] = str_to_int(d[3])
+                else:
+                    data[d[0]][d[2]][int(d[1][-1:])] = str_to_float(d[3])
+            except:
+                if d[2] == "temperature":
+                    data[d[0]][d[2]][replaces(d[1], {"cpu ": ""})] = str_to_int(d[3])
+                else:
+                    data[d[0]][d[2]][replaces(d[1], {"cpu ": ""})] = str_to_float(d[3])
+    return data
 
 def linux_bytes(string: Optional[Union[str, int]]) -> Optional[int]:
     if not isinstance(string, int):

@@ -9,6 +9,9 @@ console.print(f"[yellow]Location of this file[/] [red]->[/] [green]{__file__}[/]
 console.rule("CPU INFO")
 console.print(pciw.get_cpu_info())
 
+console.rule("CPU STATUS TEST")
+console.print(pciw.get_cpu_status())
+
 console.rule("RAM INFO")
 console.print(pciw.get_ram_info())
 

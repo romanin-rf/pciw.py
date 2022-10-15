@@ -1,5 +1,6 @@
 from .pciw import \
     get_cpu_info, \
+    get_cpu_status, \
     get_ram_info, \
     get_gpu_info, \
     get_monitors_info, \
@@ -9,4 +10,4 @@ from .pciw import \
     get_sound_device_info
 
 __name__ = "pciw.py"
-__version__ = "0.7-f3"
+__version__ = "0.8"
