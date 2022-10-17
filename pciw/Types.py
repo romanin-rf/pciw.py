@@ -1,7 +1,48 @@
 import datetime
 from dataclasses import dataclass
-from typing import List, Union, Tuple, Optional
-from enhanced_versioning import SemanticVersion, NonSemanticVersion
+from typing import List, Tuple
+
+# ! MO
+class Version:
+    def __init__(self, version: str) -> None:
+        self.__version = version
+        self.__hash = hash(self.__version)
+    
+    def __str__(self) -> str:
+        return self.__version
+    
+    def __repr__(self) -> str:
+        return f"Version('{self.__version}', {self.__hash})"
+    
+    def __eq__(self, other: object) -> bool:
+        if isinstance(other, Version):
+            return self.__hash == other.__hash
+        return False
+    
+    def __ne__(self, other: object) -> bool:
+        if isinstance(other, Version):
+            return self.__hash != other.__hash
+        return True
+    
+    def __lt__(self, other: object) -> bool:
+        if isinstance(other, Version):
+            return self.__hash < other.__hash
+        return False
+    
+    def __le__(self, other: object) -> bool:
+        if isinstance(other, Version):
+            return self.__hash <= other.__hash
+        return False
+    
+    def __gt__(self, other: object) -> bool:
+        if isinstance(other, Version):
+            return self.__hash > other.__hash
+        return False
+    
+    def __ge__(self, other: object) -> bool:
+        if isinstance(other, Version):
+            return self.__hash >= other.__hash
+        return False
 
 # ! Other
 @dataclass
@@ -63,7 +104,7 @@ class GPU:
     name: str
     model: str
     company: str
-    driver_version: Union[SemanticVersion, NonSemanticVersion]
+    driver_version: Version
     driver_date: datetime.datetime
     memory_capacity: int
     memory_type: str
@@ -84,7 +125,7 @@ class NGPU:
     name: str
     id: int
     uuid: str
-    driver_version: Union[SemanticVersion, NonSemanticVersion]
+    driver_version: Version
     serial_number: str
     display_active: str
     display_mode: str
@@ -101,22 +142,20 @@ class Monitor:
 class Motherboard:
     name: str
     tag: str
-    version: Optional[Union[SemanticVersion, NonSemanticVersion]]
+    version: Version
     product: str
-    serial_number: Optional[str]
+    serial_number: str
     manufacturer: str
-    power_on: Optional[bool]
-    removable: Optional[bool]
-    replaceable: Optional[bool]
-    rdb: Optional[bool]
-    hosting_board: Optional[bool]
-    hot_swappable: Optional[bool]
+    power_on: bool
+    removable: bool
+    replaceable: bool
+    rdb: bool
+    hosting_board: bool
+    hot_swappable: bool
 
 @dataclass
 class SMBIOS:
-    version: str
-    major_version: str
-    minor_version: str
+    version: Version
     present: bool
 
 @dataclass
@@ -128,7 +167,7 @@ class BIOS:
     current_language: Language
     is_primary: bool
     serial_number: str
-    version: Union[SemanticVersion, NonSemanticVersion]
+    version: Version
     smbios: SMBIOS
     characteristics: List[str]
 
@@ -137,6 +176,6 @@ class SoundDevice:
     name: str
     product_name: str
     manufacturer: str
-    device_ids: List[str]
-    pnp_device_ids: List[str]
+    device_ids: str
+    pnp_device_ids: str
     pms: bool

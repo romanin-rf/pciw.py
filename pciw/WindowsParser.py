@@ -460,8 +460,8 @@ def get_sound_device() -> List[Dict[str, Any]]:
                 "name": ek("Name", i)[1],
                 "product_name": ek("ProductName", i)[1],
                 "manufacturer": ek("Manufacturer", i)[1],
-                "device_ids": spliter(ek("DeviceID", i)[1], ";"),
-                "pnp_device_ids": spliter(ek("PNPDeviceID", i)[1], ";"),
+                "device_ids": ek("DeviceID", i)[1],
+                "pnp_device_ids": ek("PNPDeviceID", i)[1],
                 "pms": Converter.str_to_bool(ek("PowerManagementSupported", i)[1])
             }
         )

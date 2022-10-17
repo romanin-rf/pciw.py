@@ -1,7 +1,6 @@
 import platform
 from .Types import *
-from enhanced_versioning import SemanticVersion, NonSemanticVersion
-from typing import Literal, Optional, List, Union
+from typing import Literal, Optional, List
 # * Локальные импорт
 try:
     import SupportHandler as sh
@@ -13,7 +12,7 @@ class NvidiaSMIError(Exception):
     """Called if there is an error parsing information from NVIDIA-SMI, usually a problem in the absence of NVIDIA Corporation"""
     def __init__(self, *args) -> None:
         if len(args) != 0:
-            self.msg = " ".join([str(args) for i in args])
+            self.msg = " ".join([str(i) for i in args])
         else:
             self.msg = "NVIDIA-SMI couldn't find 'nvml.dll' library in your system"
 
@@ -59,16 +58,9 @@ def __gt(value: int, tp: Optional[Literal["C", "F"]]=None) -> Optional[Temperatu
     except:
         pass
 
-def _gV(
-    version: Optional[str]
-) -> Optional[Union[SemanticVersion, NonSemanticVersion]]:
-    try:
-        return SemanticVersion(version)
-    except:
-        try:
-            return NonSemanticVersion(version)
-        except:
-            pass
+def _gV(version: Optional[str]) -> Optional[Version]:
+    if version is not None:
+        return Version(version)
 
 # ! Открытые функции
 @supporter.add_support(["Windows", "Linux"])
@@ -129,10 +121,12 @@ def get_motherboard_info() -> Motherboard:
 def get_bios_info() -> BIOS:
     """Returns the `BIOS` dataclass, containing information about the BIOS"""
     info = Parser.get_bios()
+    if None in [info["smbios_major_version"], info["smbios_minor_version"], info["smbios_version"]]:
+        smbios_version = None
+    else:
+        smbios_version = Version(".".join([info["smbios_major_version"], info["smbios_minor_version"], info["smbios_version"]]))
     smbios = SMBIOS(
-        info["smbios_version"],
-        info["smbios_major_version"],
-        info["smbios_minor_version"],
+        smbios_version,
         info["smbios_present"]
     )
     del info["smbios_version"], info["smbios_major_version"], info["smbios_minor_version"], info["smbios_present"]

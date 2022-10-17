@@ -3,9 +3,9 @@ from dateutil import parser
 from typing import Union, Any, List, Optional, Tuple, Dict
 # ! Локальные импорты
 try:
-    from . import units
+    from . import units as units
 except:
-    import units
+    import units as units
 
 # ! Константы
 LINUX_BYTES_NAMES: Dict[str, int] = {
