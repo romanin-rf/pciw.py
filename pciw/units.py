@@ -14,7 +14,7 @@ NVIDIA_VALUES_EXCEPTIONS = [
 # ! Работа с путями
 NVIDIA_SMI_PATH_SUPPORTED = {"Windows": os.path.join(os.path.dirname(__file__), "data\\nsmi\\Windows\\nsmi.exe")}
 NVIDIA_SMI_PATH: str = exists_key(platform.system(), NVIDIA_SMI_PATH_SUPPORTED)[1]
-T_CPU_PATH_SUPPORTED = {"Windows": os.path.join(os.path.dirname(__file__), "data\\t_cpu\\Windows\\t_cpu.exe")}
+T_CPU_PATH_SUPPORTED = {"Windows": os.path.join(os.path.dirname(__file__), "data\\t_cpu\\Windows\\parser.py")}
 T_CPU_PATH: str = exists_key(platform.system(), T_CPU_PATH_SUPPORTED)[1]
 # ! Для определения типа
 class NT_TYPES:

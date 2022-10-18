@@ -1,6 +1,8 @@
+import os
+import sys
+import subprocess
 import cpuinfo
 import screeninfo
-import subprocess
 from typing import Union, Any, List, Optional, Literal, Tuple, Dict
 
 # ! Локальные импорты
@@ -91,6 +93,13 @@ def request_nsmi2(qgpu: List[str]) -> List[Dict[str, Any]]:
         pass
     return data
 
+def request_t_cpu() -> str:
+    subprocess.check_output([sys.executable, units.T_CPU_PATH]);req_file_path = os.path.join(os.path.dirname(units.T_CPU_PATH), "req.log")
+    with open(req_file_path, "rb") as file:
+        data = file.read()
+    os.remove(req_file_path)
+    return data.decode(errors="ignore")
+
 # ! Функции определения
 def get_mff(code: int) -> str:
     return units.NT_TYPES.MEMORY_FORM_FACTOR[code]
@@ -143,7 +152,7 @@ def get_cpu() -> Dict[str, Any]:
     }
 
 def get_cpu_status() -> Dict[str, List[Dict[str, Any]]]:
-    d = Converter.t_cpu_data_to_dict(subprocess.check_output(units.T_CPU_PATH, stdin=subprocess.PIPE).decode(errors="ignore"))
+    d = Converter.t_cpu_data_to_dict(request_t_cpu())
     dd, cc = {"cores": []}, 1
     dd["package_temperature"] = d["cpu"]["temperature"]["package"]
     dd["total_load"] = d["cpu"]["load"]["total"]

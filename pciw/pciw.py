@@ -78,8 +78,6 @@ def get_cpu_info() -> CPU:
 def get_cpu_status() -> CPUStatus:
     """
     Returns dataclass `CPUStatus` containing the CPU status.
-
-    `!!! WARNING FOR WINDOWS !!!` You must `run Python as administrator` to get all the information.
     """
     d, c = Parser.get_cpu_status(), 0
     for i in d["cores"]:
