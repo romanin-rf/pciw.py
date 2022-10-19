@@ -37,6 +37,6 @@ setuptools.setup(
 	include_package_data=True,
 	author='ProgrammerFromParlament',
 	license='MIT',
-	install_requires=["screeninfo", "py-cpuinfo", "python-dateutil", "rich", "pynvml"],
-    setup_requires=["screeninfo", "py-cpuinfo", "python-dateutil", "rich", "pynvml"]
+	install_requires=["screeninfo", "py-cpuinfo", "python-dateutil", "rich", "pynvml", "elevate"],
+    setup_requires=["screeninfo", "py-cpuinfo", "python-dateutil", "rich", "pynvml", "elevate"]
 )
