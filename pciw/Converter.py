@@ -24,6 +24,30 @@ def exists_key(
     except:
         return False, None
 
+def eks(
+    data: Union[dict, list, tuple],
+    keys: Union[str, Union[list, str]]
+) -> Tuple[bool, Optional[Any]]:
+    ks = ""
+    if isinstance(keys, str):
+        for i in keys.split("."):
+            try:
+                it = eval(i)
+                ks += f"[{it}]"
+            except:
+                it = str(i)
+                ks += f"[\"{it}\"]"
+    elif isinstance(keys, list):
+        for i in keys:
+            if isinstance(i, str):
+                ks += f"[\"{i}\"]"
+            else:
+                ks += f"[{i}]"
+    try:
+        return True, eval(f"data{ks}")
+    except:
+        return False, None
+
 def removes(l: list, ldv: list) -> list:
     for value in ldv:
         for i in range(0, l.count(value)):

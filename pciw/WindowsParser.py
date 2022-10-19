@@ -153,21 +153,23 @@ def get_cpu() -> Dict[str, Any]:
 
 def get_cpu_status() -> Dict[str, List[Dict[str, Any]]]:
     d = Converter.t_cpu_data_to_dict(request_t_cpu())
-    dd, cc = {"cores": []}, 1
-    dd["package_temperature"] = d["cpu"]["temperature"]["package"]
-    dd["total_load"] = d["cpu"]["load"]["total"]
-    for i in d["cpu"]["clock"]:
-        if isinstance(i, int):
-            cc += 1
-    for _ in range(1, cc):
-        dd["cores"].append(
-            {
-                "index": _,
-                "load": d["cpu"]["load"][_],
-                "temperature": d["cpu"]["temperature"][_],
-                "clock": d["cpu"]["clock"][_]
-            }
-        )
+    dd, i = {"cores": []}, 1
+    dd["package_temperature"] = Converter.eks(d, ["cpu", "temperature", "package"])[1]
+    dd["total_load"] = Converter.eks(d, ["cpu", "load", "total"])[1]
+    if Converter.eks(d, ["cpu", "load"])[1] is not None:
+        while True:
+            if i in Converter.eks(d, ["cpu", "load"])[1]:
+                dd["cores"].append(
+                    {
+                        "index": i,
+                        "load": Converter.eks(d, ["cpu", "load", i])[1],
+                        "temperature": Converter.eks(d, ["cpu", "temperature", i])[1],
+                        "clock": Converter.eks(d, ["cpu", "clock", i])[1]
+                    }
+                )
+            else:
+                break
+            i += 1
     return dd
 
 def get_ram() -> List[Dict[str, Any]]:
