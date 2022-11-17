@@ -384,11 +384,11 @@ def get_nvidia_videocards() -> List[Dict[str, Any]]:
                     }
                 }
             )
-        return nvidia_videocards
     except:
         pass
     if len(nvidia_videocards) == 0:
         return get_nvidia_videocards2()
+    return nvidia_videocards
 
 def get_motherboard() -> Dict[str, Any]:
     info = Converter.value_to_dict(request(

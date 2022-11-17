@@ -7,7 +7,10 @@ from .pciw import \
     get_motherboard_info, \
     get_bios_info, \
     get_ngpu_info, \
-    get_sound_device_info
+    get_sound_device_info, \
+    CPU, CPUCache, CPUCore, CPUStatus, \
+    NGPU, NGPUStatus, NvidiaSMIError, GPU, \
+    RAMBank, BIOS, Monitor, Motherboard, SMBIOS, SoundDevice
 
 __name__ = "pciw.py"
-__version__ = "0.8.4"
+__version__ = "0.8.5"
