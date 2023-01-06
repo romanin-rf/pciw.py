@@ -1,4 +1,4 @@
-from . import pciw
+import pciw
 from rich.console import Console
 
 # * Иницализация

@@ -1,9 +1,6 @@
 import cpuinfo
 from typing import Any, Dict
-try:
-    import Converter
-except:
-    from . import Converter
+from . import Converter
 
 # ! Функции парсинга
 def get_cpu() -> Dict[str, Any]:

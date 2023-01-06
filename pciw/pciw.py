@@ -2,10 +2,7 @@ import platform
 from .Types import *
 from typing import Literal, Optional, List
 # * Локальные импорт
-try:
-    import SupportHandler as sh
-except:
-    from . import SupportHandler as sh
+from . import SupportHandler as sh
 
 # ! Исключения
 class NvidiaSMIError(Exception):
@@ -24,20 +21,11 @@ supporter = sh.Supported()
 
 # ! Проверка поддержки системы и импорт соответвуещего парсера
 if platform.system() == "Windows":
-    try:
-        from . import WindowsParser as Parser
-    except:
-        import WindowsParser as Parser
+    from . import WindowsParser as Parser
 elif platform.system() == "Linux":
-    try:
-        from . import LinuxParser as Parser
-    except:
-        import LinuxParser as Parser
+    from . import LinuxParser as Parser
 else:
-    try:
-        from . import PassParser as Parser
-    except:
-        import PassParser as Parser
+    from . import PassParser as Parser
 
 # ! Внутринние функции
 def __Ft(C: int) -> int:

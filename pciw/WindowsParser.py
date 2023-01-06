@@ -6,12 +6,8 @@ import screeninfo
 from typing import Union, Any, List, Optional, Literal, Tuple, Dict
 
 # ! Локальные импорты
-try:
-    import units
-    import Converter
-except:
-    from . import units
-    from . import Converter
+from . import units
+from . import Converter
 
 # ! Функции
 def ek(

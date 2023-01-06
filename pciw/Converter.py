@@ -2,10 +2,7 @@ import datetime
 from dateutil import parser
 from typing import Union, Any, List, Optional, Tuple, Dict
 # ! Локальные импорты
-try:
-    from . import units as units
-except:
-    import units as units
+from . import units as units
 
 # ! Константы
 LINUX_BYTES_NAMES: Dict[str, int] = {
