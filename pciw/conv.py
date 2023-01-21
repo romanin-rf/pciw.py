@@ -11,40 +11,7 @@ LINUX_BYTES_NAMES: Dict[str, int] = {
     "GiB": 1073741824
 }
 
-# ! Главные функции
-def exists_key(
-    key: Union[str, int],
-    data: Union[dict, list, tuple]
-) -> Tuple[bool, Optional[Any]]:
-    try:
-        return True, data[key]
-    except:
-        return False, None
-
-def eks(
-    data: Union[dict, list, tuple],
-    keys: Union[str, Union[list, str]]
-) -> Tuple[bool, Optional[Any]]:
-    ks = ""
-    if isinstance(keys, str):
-        for i in keys.split("."):
-            try:
-                it = eval(i)
-                ks += f"[{it}]"
-            except:
-                it = str(i)
-                ks += f"[\"{it}\"]"
-    elif isinstance(keys, list):
-        for i in keys:
-            if isinstance(i, str):
-                ks += f"[\"{i}\"]"
-            else:
-                ks += f"[{i}]"
-    try:
-        return True, eval(f"data{ks}")
-    except:
-        return False, None
-
+# Функции редактирования
 def removes(l: list, ldv: list) -> list:
     for value in ldv:
         for i in range(0, l.count(value)):
@@ -63,14 +30,15 @@ def startswiths(string: str, sl: List[str]) -> bool:
             return True
     return False
 
-def str_to_bool(string: str) -> Optional[bool]:
+# ! Convert Functions
+def to_bool(string: str) -> Optional[bool]:
     string = string.lower().replace(" ", "")
     if string == "true":
         return True
     elif string == "false":
         return False
 
-def str_to_int(string: Optional[Union[str, int]]) -> Optional[int]:
+def to_int(string: Optional[Union[str, int]]) -> Optional[int]:
     if string is not None:
         if not isinstance(string, int):
             string = string.lower().replace(" ", "")
@@ -80,7 +48,7 @@ def str_to_int(string: Optional[Union[str, int]]) -> Optional[int]:
                 pass
         return string
 
-def str_to_float(string: Optional[str]) -> Optional[float]:
+def to_float(string: Optional[str]) -> Optional[float]:
     if string is not None:
         string = replaces(string.lower(), {" ": "", ",": "."})
         try:
@@ -88,43 +56,13 @@ def str_to_float(string: Optional[str]) -> Optional[float]:
         except:
             pass
 
-def windate_to_datetime(string: str) -> Optional[datetime.datetime]:
-    try:
-        return parser.parse(
-            "{year}.{month}.{day} {hour}:{min}.{sec}"\
-            .format(
-                year=string[0:4],
-                month=string[4:6],
-                day=string[6:8],
-                hour=string[8:10],
-                min=string[10:12],
-                sec=string[12:14]
-            )
-        )
-    except:
-        pass
-
-def winlang_to_tuple(string: Union[List[str], str]) -> Optional[Union[List[Tuple[str, str, str]], Tuple[str, str, str]]]:
-    try:
-        if isinstance(string, list):
-            return [tuple(i.split("|")) for i in string]
-        elif isinstance(string, str):
-            return tuple(string.split("|"))
-    except:
-        pass
-
-def sn(string: Optional[str]) -> Optional[str]:
-    if string is not None:
-        if not startswiths(string, units.NONE_TYPE_EXCEPTIONS):
-            return string
-
-def from_csv(data: str, *, sep=",", end="\r\r\n") -> List[Dict[str, str]]:
+def from_csv(data: str, *, header: List[str]=[], sep=",", end="\r\r\n") -> List[Dict[str, str]]:
     d: List[List[str]] = [i.split(sep) for i in removes(data.split(end),[""])]
-    header = d[0] ; d = d[1:]
+    head = d[0] if len(header) else header ; d = d[1:]
     out = []
     for dl in d:
         l = {}
-        for idx, i in enumerate(dl): l[header[idx]] = i
+        for idx, i in enumerate(dl): l[head[idx]] = i
         out.append(l)
     return out
 
@@ -144,14 +82,14 @@ def t_cpu_data_to_dict(s: str) -> Dict[str, Dict[str, Dict[Any, Any]]]:
         if d[0] == "cpu":
             try:
                 if d[2] == "temperature":
-                    data[d[0]][d[2]][int(d[1][-1:])] = str_to_int(d[3])
+                    data[d[0]][d[2]][int(d[1][-1:])] = to_int(d[3])
                 else:
-                    data[d[0]][d[2]][int(d[1][-1:])] = str_to_float(d[3])
+                    data[d[0]][d[2]][int(d[1][-1:])] = to_float(d[3])
             except:
                 if d[2] == "temperature":
-                    data[d[0]][d[2]][replaces(d[1], {"cpu ": ""})] = str_to_int(d[3])
+                    data[d[0]][d[2]][replaces(d[1], {"cpu ": ""})] = to_int(d[3])
                 else:
-                    data[d[0]][d[2]][replaces(d[1], {"cpu ": ""})] = str_to_float(d[3])
+                    data[d[0]][d[2]][replaces(d[1], {"cpu ": ""})] = to_float(d[3])
     return data
 
 def linux_bytes(string: Optional[Union[str, int]]) -> Optional[int]:
@@ -163,3 +101,33 @@ def linux_bytes(string: Optional[Union[str, int]]) -> Optional[int]:
             except:
                 pass
     return string
+
+# ! Windows Convertion Functions
+def windate_to_datetime(string: str) -> Optional[datetime.datetime]:
+    try:
+        return parser.parse(
+            "{year}.{month}.{day} {hour}:{min}.{sec}"\
+            .format(
+                year=string[0:4],
+                month=string[4:6],
+                day=string[6:8],
+                hour=string[8:10],
+                min=string[10:12],
+                sec=string[12:14]
+            )
+        )
+    except: pass
+
+def winlang_to_tuple(string: Union[List[str], str], *, string_sep=";") -> Optional[Union[List[Tuple[str, str, str]], Tuple[str, str, str]]]:
+    try:
+        if isinstance(string, list):
+            return [tuple(i.split("|")) for i in string]
+        elif isinstance(string, str):
+            return tuple(string.split("|"))
+    except: pass
+
+# ! Функции проверки
+def sn(string: Optional[str]) -> Optional[str]:
+    if string is not None:
+        if not startswiths(string, units.NONE_TYPE_EXCEPTIONS):
+            return string
