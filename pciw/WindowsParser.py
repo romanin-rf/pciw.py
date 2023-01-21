@@ -10,14 +10,29 @@ from . import units
 def wmic(*args: str, **kwargs: str) -> str:
     return subprocess.check_output(["wmic", *args, *[f"/{i}:{kwargs[i]}" for i in kwargs]]).decode(errors="ignore")
 
+def nsmi(*args: str, **kwargs: str) -> str:
+    if units.NVIDIA_SMI_PATH is not None:
+        try:
+            return subprocess.check_output([units.NVIDIA_SMI_PATH, *args, *[f"{i}={kwargs[i]}" for i in kwargs]]).decode(errors="ignore")
+        except: pass
+    return ""
+
+def nsmi2(*args: str) -> List[Dict[str, Any]]: return []
+
 # ! Функции определения
 def get_mff(code: int) -> str: return units.NT.MEMORY_FORM_FACTOR.get(code, None)
 def get_mtype(code: int) -> str: return units.NT.MEMORY_TYPE.get(code, None)
 def get_vmtype(code: int) -> str: return units.NT.VIDEO_MEMORY_TYPE.get(code, None)
 def get_varch(code: int) -> str: return units.NT.VIDEO_ARCHITECTURE.get(code, None)
 def get_vaval(code: int) -> str: return units.NT.VIDEO_ALAILABILITY.get(code, None)
-def chrct(code: int) -> str: return units.NT.BIOS_CHARACTERISTICS.get(code, None)
-def tnvv(value: Optional[str]) -> str:
+def chrct(code: int) -> str:
+    if 40 <= code <= 47:
+        return f"<BIOS{code}>"
+    elif 48 <= code <= 63:
+        return f"<OS{code}>"
+    else:
+        return units.NT.BIOS_CHARACTERISTICS.get(code, None)
+def tnvv(value: Optional[str]) -> Optional[str]:
     if value is not None:
         if value in units.NONE_TYPE_EXCEPTIONS:
             return None
@@ -32,14 +47,16 @@ def get_nv_actiovitions(code: Optional[str]) -> Optional[bool]:
 # ! Parsers
 def get_cpu() -> Dict[str, Any]:
     info = dict(cpuinfo.get_cpu_info())
+    try: Hz = round(info.get("hz_actual", 0)[0] / 1e9, 1)
+    except: Hz = 0
     return {
         "name": info.get("brand_raw", None),
         "model": info.get("model", None),
         "family": info.get("family", None),
         "stepping": info.get("stepping", None),
         "architecture": info.get("arch", None),
-        "bits": info.get(info["bits"], None),
-        "frequency": round(info.get("hz_actual", 0) / 1e9, 1),
+        "bits": info.get("bits", None),
+        "frequency": Hz,
         "cores_count": info.get("count", None),
         "cache": {
             "l2_size": info.get("l2_cache_size", None),
@@ -49,7 +66,7 @@ def get_cpu() -> Dict[str, Any]:
     }
 
 def get_ram() -> List[Dict[str, Any]]:
-    d, out = conv.from_csv(wmic("MEMORYCHIP", "LIST", FORMAT="CSV")), []
+    d, out = conv.from_values(wmic("MEMORYCHIP", "LIST", FORMAT="VALUE")), []
     for i in d:
         out.append(
             {
@@ -75,20 +92,58 @@ def get_monitors() -> List[Dict[str, Any]]:
         } for i in screeninfo.get_monitors()
     ]
 
-def get_videocards_pynvml() -> List[Dict[str, Any]]:
-    pass
+def get_nvidia_videocards_pynvml() -> List[Dict[str, Any]]:
+    return []
 
-def get_videocards_nsmi() -> List[Dict[str, Any]]:
-    pass
-
-def get_videocards() -> List[Dict[str, Any]]:
-    d, out = conv.from_csv(wmic("path", "win32_VideoController", "GET", "Name,VideoProcessor,AdapterRAM,Availability,AdapterCompatibility,VideoArchitecture,VideoMemoryType,DriverDate,DriverVersion", FORMAT="CSV")), []
+def get_nvidia_videocards_nsmi() -> List[Dict[str, Any]]:
+    d, out = conv.from_csv(nsmi("--query-gpu=index,uuid,utilization.gpu,driver_version,name,gpu_serial,display_active,display_mode,memory.total,memory.used,memory.free,temperature.gpu,fan.speed", "--format=csv,noheader,nounits"), header=["index", "uuid", "utilization.gpu", "driver_version", "name", "gpu_serial", "display_active", "display_mode", "memory.total", "memory.used", "memory.free", "temperature.gpu", "fan.speed"], sep=", ", end="\r\n"), []
     for i in d:
-        ...
+        out.append(
+            {
+                "id": conv.to_int(i.get("index", None)),
+                "name": i.get("name", None),
+                "uuid": i.get("uuid", None),
+                "driver_version": i.get("driver_version", None),
+                "serial_number": conv.sn(i.get("gpu_serial", None)),
+                "display_active": tnvv(i.get("display_active", None)),
+                "display_mode": tnvv(i.get("display_mode", None)),
+                "status": {
+                    "utilization": conv.to_int(i.get("utilization.gpu", None)),
+                    "memory_total": conv.to_int(i.get("memory.total", None)),
+                    "memory_used": conv.to_int(i.get("memory.used", None)),
+                    "memory_free": conv.to_int(i.get("memory.free", None)),
+                    "temperature": conv.to_int(i.get("temperature.gpu", None)),
+                    "fan_speed": conv.to_int(i.get("fan.speed", None))
+                }
+            }
+        )
     return out
 
-def get_motherboard() -> Dict[str, Any]: 
-    info = conv.from_csv(wmic("BASEBOARD", "GET", "Name,PoweredOn,Product,Removable,Replaceable,RequiresDaughterBoard,SerialNumber,Tag,Version,HostingBoard,HotSwappable,Manufacturer", FORMAT="CSV"))[0]
+def get_nvidia_videocards() -> List[Dict[str, Any]]:
+    if len(data:=get_nvidia_videocards_nsmi()) == 0:
+        data = get_nvidia_videocards_pynvml()
+    return data
+
+def get_videocards() -> List[Dict[str, Any]]:
+    d, out = conv.from_values(wmic("path", "win32_VideoController", "GET", "Name,VideoProcessor,AdapterRAM,Availability,AdapterCompatibility,VideoArchitecture,VideoMemoryType,DriverDate,DriverVersion", FORMAT="VALUE")), []
+    for i in d:
+        out.append(
+            {
+                "name": i.get("Name", None),
+                "model": i.get("VideoProcessor", None),
+                "company": i.get("AdapterCompatibility", None),
+                "driver_version": i.get("DriverVersion", None),
+                "driver_date": conv.windate_to_datetime(i.get("DriverDate", None)),
+                "memory_capacity": conv.to_int(i.get("AdapterRAM", None)),
+                "memory_type": get_vmtype(conv.to_int(i.get("VideoMemoryType", None))),
+                "architecture": get_varch(conv.to_int(i.get("VideoArchitecture", None))),
+                "availability": get_vaval(conv.to_int(i.get("Availability", None)))
+            }
+        )
+    return out
+
+def get_motherboard() -> Dict[str, Any]:
+    info = conv.from_values(wmic("BASEBOARD", "GET", "Name,PoweredOn,Product,Removable,Replaceable,RequiresDaughterBoard,SerialNumber,Tag,Version,HostingBoard,HotSwappable,Manufacturer", FORMAT="VALUE"))[0]
     return {
         "name": info.get("Name", None),
         "tag": info.get("Tag", None),
@@ -105,35 +160,25 @@ def get_motherboard() -> Dict[str, Any]:
     }
 
 def get_bios() -> Dict[str, Any]:
-    info = conv.from_csv(wmic("BIOS", "LIST", FORMAT="CSV"))[0]
-    """
-    try:
-        langs = info.get("ListOfLanguages", "{}")
+    info = conv.from_values(wmic("BIOS", "LIST", FORMAT="VALUE"))[0]
+    try: langs = conv.winlang_to_tuple(conv.removes(conv.replaces(info.get("ListOfLanguages", ""), {";": ",", "{": "", "}": "", "\"": ""}).split(","), [""]))
     except: langs = []
-    try: clang = info.get("")
-    try: characteristics = list([chrct(i) for i in eval(info.get("BiosCharacteristics", "[]")).replace(";", ",")])
-    except: pass
-    
+    try: clang = conv.winlang_to_tuple(info.get("CurrentLanguage", ""))
+    except: clang = None
+    try: characteristics = [chrct(i) for i in eval(info.get("BiosCharacteristics", "{}").replace(";", ","))]
+    except: characteristics = []
     return {
-        "name": ek("Name", info)[1],
-        "manufacturer": ek("Manufacturer", info)[1],
-        "release_date": conv.windate_to_datetime(
-            ek("ReleaseDate", info)[1]
-        ),
+        "name": info.get("Name", None),
+        "manufacturer": info.get("Manufacturer", None),
+        "release_date": conv.windate_to_datetime(info.get("ReleaseDate", None)),
         "languages": langs,
         "current_language": clang,
-        "is_primary": conv.str_to_bool(
-            ek("PrimaryBIOS", info)[1]
-        ),
-        "serial_number": conv.sn(
-            ek("SerialNumber", info)[1]
-        ),
-        "version": ek("Version", info)[1],
-        "smbios_version": ek("SMBIOSBIOSVersion", info)[1],
-        "smbios_major_version": ek("SMBIOSMajorVersion", info)[1],
-        "smbios_minor_version": ek("SMBIOSMinorVersion", info)[1],
-        "smbios_present": conv.str_to_bool(
-            ek("SMBIOSPresent", info)[1]
-        ),
+        "is_primary": conv.to_bool(info.get("PrimaryBIOS", None)),
+        "serial_number": conv.sn(info.get("SerialNumber", None)),
+        "version": info.get("Version", None),
+        "smbios_version": info.get("SMBIOSBIOSVersion", None),
+        "smbios_major_version": info.get("SMBIOSMajorVersion", None),
+        "smbios_minor_version": info.get("SMBIOSMinorVersion", None),
+        "smbios_present": conv.to_bool(info.get("SMBIOSPresent", None)),
         "characteristics": characteristics
-    """
+    }

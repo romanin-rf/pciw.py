@@ -32,53 +32,61 @@ def startswiths(string: str, sl: List[str]) -> bool:
 
 # ! Convert Functions
 def to_bool(string: str) -> Optional[bool]:
-    string = string.lower().replace(" ", "")
-    if string == "true":
-        return True
-    elif string == "false":
-        return False
+    try: return bool(string.replace(" ", "").title())
+    except: pass
 
-def to_int(string: Optional[Union[str, int]]) -> Optional[int]:
-    if string is not None:
-        if not isinstance(string, int):
-            string = string.lower().replace(" ", "")
-            try:
-                return int(string)
-            except:
-                pass
-        return string
+def to_int(string: Optional[str]) -> Optional[int]:
+    try: return int(string.lower().replace(" ", ""))
+    except: pass
 
 def to_float(string: Optional[str]) -> Optional[float]:
-    if string is not None:
-        string = replaces(string.lower(), {" ": "", ",": "."})
-        try:
-            return float(string)
-        except:
-            pass
+    try: return float(replaces(string.lower(), {" ": "", ",": "."}))
+    except: pass
 
-def from_csv(data: str, *, header: List[str]=[], sep=",", end="\r\r\n") -> List[Dict[str, str]]:
-    d: List[List[str]] = [i.split(sep) for i in removes(data.split(end),[""])]
-    head = d[0] if len(header) else header ; d = d[1:]
-    out = []
-    for dl in d:
+def from_values(string: str) -> List[Dict[str, Optional[str]]]:
+    data: List[List[str]] = [
+        i.split("\r\r\n") for i in removes(
+            string.replace("\r\r\n\r\r\n\r\r\n\r\r\n", "").split("\r\r\n\r\r\n"),
+            [""]
+        )
+    ]
+    do = []
+    for table in data:
+        d = {}
+        for line in table:
+            rd = line.split("=")
+            if rd[0].replace(" ", "") != "":
+                d[rd[0]] = rd[1]\
+                    if (
+                        rd[0].replace(" ", "") != ""
+                    ) else None
+        do.append(d)
+    for idx, item in enumerate(do):
+        for key in item.keys():
+            if item[key].replace(" ", "") == "":
+                do[idx][key] = None
+    return do
+
+def from_csv(data: str, *, header: Optional[List[str]]=None, sep=",", end="\r\r\n") -> List[Dict[str, str]]:
+    dt: List[List[str]] = [i.split(sep) for i in removes(data.split(end), [""])]
+    head, out = header or dt[0], []
+    if header is None: dt = dt[1:]
+    for d in dt:
         l = {}
-        for idx, i in enumerate(dl): l[head[idx]] = i
+        for idx, i in enumerate(head):
+            l[i] = d[idx]
         out.append(l)
     return out
 
 def t_cpu_data_to_dict(s: str) -> Dict[str, Dict[str, Dict[Any, Any]]]:
     data = {}
     for i in removes(s.split("\r\n"), [""]):
-        i: str
         d = [i.lower() for i in i.split(":")]
-        # ! ДОЛПИСАТЬ ПАРСИНГ
         if d[0] not in data:
             data[d[0]] = {}
         if d[2] not in data[d[0]]:
             data[d[0]][d[2]] = {}
-        
         d[3] = d[3] if (d[3] not in [""]) else None
-
         if d[0] == "cpu":
             try:
                 if d[2] == "temperature":

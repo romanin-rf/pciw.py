@@ -2,7 +2,7 @@ import os
 import platform
 
 # ! Для функций
-NONE_TYPE_EXCEPTIONS = ["To be filled", "Default", "N/A", "[Not Supported]"]
+NONE_TYPE_EXCEPTIONS = ["To be filled", "Default", "N/A", "[Not Supported]", "[notsupported]"]
 
 # ! Определение путей
 NVIDIA_SMI_PATH_SUPPORTED = {"Windows": os.path.join(os.path.dirname(__file__), "data\\nsmi\\Windows\\nsmi.exe")}

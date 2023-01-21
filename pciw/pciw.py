@@ -51,7 +51,7 @@ def _gV(version: Optional[str]) -> Optional[Version]:
         return Version(version)
 
 # ! Открытые функции
-@supporter.add_support(["Windows", "Linux"])
+@supporter.add_support(["Windows", "Linux"], errors="view")
 def get_cpu_info() -> CPU:
     """Returns the `CPU` dataclass containing information about the CPU"""
     cpu_info = Parser.get_cpu()
