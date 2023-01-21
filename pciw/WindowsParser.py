@@ -17,7 +17,15 @@ def nsmi(*args: str, **kwargs: str) -> str:
         except: pass
     return ""
 
-def nsmi2(*args: str) -> List[Dict[str, Any]]: return []
+def nsmi2(*args: str) -> List[Dict[str, Any]]:
+    out = []
+    try:
+        from pynvml.smi import nvidia_smi
+        nsmi = nvidia_smi.getInstance()
+        gpus = nsmi.DeviceQuery(",".join(args))
+        for i in gpus["gpu"]: out.append({**i, "driver_version": gpus["driver_version"]})
+    except: pass
+    return out
 
 # ! Функции определения
 def get_mff(code: int) -> str: return units.NT.MEMORY_FORM_FACTOR.get(code, None)
@@ -93,7 +101,28 @@ def get_monitors() -> List[Dict[str, Any]]:
     ]
 
 def get_nvidia_videocards_pynvml() -> List[Dict[str, Any]]:
-    return []
+    d, out = nsmi2('index', 'uuid', 'utilization.gpu', 'driver_version', 'name', 'gpu_serial', 'display_active', 'display_mode', 'memory.total', 'memory.used', 'memory.free', 'temperature.gpu', 'fan.speed'), []
+    for idx, i in enumerate(d):
+        out.append(
+            {
+                "name": i.get("product_name", None),
+                "id": idx,
+                "uuid": i.get("uuid", None),
+                "driver_version": i.get("driver_version", None),
+                "serial_number": conv.sn(i.get("serial", None)),
+                "display_active": get_nv_actiovitions(i.get("display_active", None)),
+                "display_mode": get_nv_actiovitions(i.get("display_mode", None)),
+                "status": {
+                    "utilization": i.get("utilization", {}).get("gpu_util", None),
+                    "memory_total": i.get("total", None),
+                    "memory_used": i.get("used", None),
+                    "memory_free": i.get("free", None),
+                    "temperature": i.get("temperature", {}).get("gpu_temp", None),
+                    "fan_speed": conv.to_int(i.get("fan_speed", None))
+                }
+            }
+        )
+    return out
 
 def get_nvidia_videocards_nsmi() -> List[Dict[str, Any]]:
     d, out = conv.from_csv(nsmi("--query-gpu=index,uuid,utilization.gpu,driver_version,name,gpu_serial,display_active,display_mode,memory.total,memory.used,memory.free,temperature.gpu,fan.speed", "--format=csv,noheader,nounits"), header=["index", "uuid", "utilization.gpu", "driver_version", "name", "gpu_serial", "display_active", "display_mode", "memory.total", "memory.used", "memory.free", "temperature.gpu", "fan.speed"], sep=", ", end="\r\n"), []
@@ -120,8 +149,7 @@ def get_nvidia_videocards_nsmi() -> List[Dict[str, Any]]:
     return out
 
 def get_nvidia_videocards() -> List[Dict[str, Any]]:
-    if len(data:=get_nvidia_videocards_nsmi()) == 0:
-        data = get_nvidia_videocards_pynvml()
+    if len(data:=get_nvidia_videocards_nsmi()) == 0: data = get_nvidia_videocards_pynvml()
     return data
 
 def get_videocards() -> List[Dict[str, Any]]:

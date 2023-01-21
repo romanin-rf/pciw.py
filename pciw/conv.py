@@ -32,15 +32,15 @@ def startswiths(string: str, sl: List[str]) -> bool:
 
 # ! Convert Functions
 def to_bool(string: str) -> Optional[bool]:
-    try: return bool(string.replace(" ", "").title())
+    try: return bool(str(string).replace(" ", "").title())
     except: pass
 
 def to_int(string: Optional[str]) -> Optional[int]:
-    try: return int(string.lower().replace(" ", ""))
+    try: return int(str(string).lower().replace(" ", ""))
     except: pass
 
 def to_float(string: Optional[str]) -> Optional[float]:
-    try: return float(replaces(string.lower(), {" ": "", ",": "."}))
+    try: return float(replaces(str(string).lower(), {" ": "", ",": "."}))
     except: pass
 
 def from_values(string: str) -> List[Dict[str, Optional[str]]]:
