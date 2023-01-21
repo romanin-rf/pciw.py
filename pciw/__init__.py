@@ -9,7 +9,7 @@ from .pciw import \
     get_ngpu_info, \
     CPU, CPUCache, CPUCore, CPUStatus, \
     NGPU, NGPUStatus, NvidiaSMIError, GPU, \
-    RAMBank, BIOS, Monitor, Motherboard, SMBIOS, SoundDevice
+    RAMBank, BIOS, Monitor, Motherboard, SMBIOS
 
 __name__ = "pciw.py"
 __version__ = "0.8.6"

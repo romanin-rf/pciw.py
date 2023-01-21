@@ -1,7 +1,9 @@
+import os
+import sys
 import cpuinfo
 import screeninfo
 import subprocess
-from typing import Union, Any, List, Optional, Literal, Tuple, Dict
+from typing import Union, Any, List, Optional, Dict
 # Local Import's
 from . import conv
 from . import units
@@ -26,6 +28,11 @@ def nsmi2(*args: str) -> List[Dict[str, Any]]:
         for i in gpus["gpu"]: out.append({**i, "driver_version": gpus["driver_version"]})
     except: pass
     return out
+
+def tcpu() -> str:
+    subprocess.check_output([sys.executable, units.T_CPU_PATH])
+    with open(os.path.join(os.path.dirname(units.T_CPU_PATH), "req.log"), "rb") as file:
+        return file.read().decode(errors="ignore")
 
 # ! Функции определения
 def get_mff(code: int) -> str: return units.NT.MEMORY_FORM_FACTOR.get(code, None)
@@ -72,6 +79,24 @@ def get_cpu() -> Dict[str, Any]:
         },
         "flags": [i.upper() for i in info.get("flags", [])]
     }
+
+def get_cpu_status() -> Dict[str, List[Dict[str, Any]]]:
+    d, out, c = conv.from_tcpu_data(tcpu()), {"cores": []}, 1
+    out["total_load"] = d.get("cpu.cpu_total.load")
+    out["package_temperature"] = d.get("cpu.cpu_package.temperature")
+    while True:
+        if d.get(f"cpu.cpu_core_#{c}.load") is not None:
+            out["cores"].append(
+                {
+                    "index": c,
+                    "load": d.get(f"cpu.cpu_core_#{c}.load"),
+                    "temperature": d.get(f"cpu.cpu_core_#{c}.temperature"),
+                    "clock": d.get(f"cpu.cpu_core_#{c}.clock")
+                }
+            )
+        else: break
+        c += 1
+    return out
 
 def get_ram() -> List[Dict[str, Any]]:
     d, out = conv.from_values(wmic("MEMORYCHIP", "LIST", FORMAT="VALUE")), []

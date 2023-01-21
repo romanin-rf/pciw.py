@@ -1,8 +1,9 @@
 import datetime
 from dateutil import parser
-from typing import Union, Any, List, Optional, Tuple, Dict
+from typing import Union, List, Optional, Tuple, Dict
 # ! Локальные импорты
-from . import units as units
+from . import tree
+from . import units
 
 # ! Константы
 LINUX_BYTES_NAMES: Dict[str, int] = {
@@ -78,27 +79,15 @@ def from_csv(data: str, *, header: Optional[List[str]]=None, sep=",", end="\r\r\
         out.append(l)
     return out
 
-def t_cpu_data_to_dict(s: str) -> Dict[str, Dict[str, Dict[Any, Any]]]:
-    data = {}
-    for i in removes(s.split("\r\n"), [""]):
-        d = [i.lower() for i in i.split(":")]
-        if d[0] not in data:
-            data[d[0]] = {}
-        if d[2] not in data[d[0]]:
-            data[d[0]][d[2]] = {}
-        d[3] = d[3] if (d[3] not in [""]) else None
-        if d[0] == "cpu":
-            try:
-                if d[2] == "temperature":
-                    data[d[0]][d[2]][int(d[1][-1:])] = to_int(d[3])
-                else:
-                    data[d[0]][d[2]][int(d[1][-1:])] = to_float(d[3])
-            except:
-                if d[2] == "temperature":
-                    data[d[0]][d[2]][replaces(d[1], {"cpu ": ""})] = to_int(d[3])
-                else:
-                    data[d[0]][d[2]][replaces(d[1], {"cpu ": ""})] = to_float(d[3])
-    return data
+def from_tcpu_data(s: str) -> tree.Tree:
+    t, slines = tree.Tree(), removes(s.split("\r\n"), [""])
+    for sline in slines:
+        *keys, value = str(sline).replace(" ", "_").lower().split(":")
+        if (data:=to_float(value)) is not None: value = data
+        elif (data:=to_int(value)) is not None: value = data
+        elif value.replace("_","") == "": value = None
+        t.set(".".join(keys), value)
+    return t
 
 def linux_bytes(string: Optional[Union[str, int]]) -> Optional[int]:
     if not isinstance(string, int):
