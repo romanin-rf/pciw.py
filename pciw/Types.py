@@ -170,12 +170,3 @@ class BIOS:
     version: Version
     smbios: SMBIOS
     characteristics: List[str]
-
-@dataclass
-class SoundDevice:
-    name: str
-    product_name: str
-    manufacturer: str
-    device_ids: str
-    pnp_device_ids: str
-    pms: bool

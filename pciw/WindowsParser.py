@@ -1,126 +1,57 @@
 import os
 import sys
-import subprocess
 import cpuinfo
 import screeninfo
-from typing import Union, Any, List, Optional, Literal, Tuple, Dict
-
-# ! Локальные импорты
+import subprocess
+from typing import Union, Any, List, Optional, Dict
+# Local Import's
+from . import conv
 from . import units
-from . import Converter
 
-# ! Функции
-def ek(
-    key: Union[str, int],
-    data: Union[dict, list, tuple]
-) -> Tuple[bool, Optional[Any]]:
-    try:
-        return True, data[key]
-    except:
-        return False, None
+# ! REQs
+def wmic(*args: str, **kwargs: str) -> str:
+    return subprocess.check_output(["wmic", *args, *[f"/{i}:{kwargs[i]}" for i in kwargs]]).decode(errors="ignore")
 
-def removes(l: list, ldv: list) -> list:
-    for value in ldv:
-        for i in range(0, l.count(value)):
-            l.remove(value)
-    return l
+def nsmi(*args: str, **kwargs: str) -> str:
+    if units.NVIDIA_SMI_PATH is not None:
+        try:
+            return subprocess.check_output([units.NVIDIA_SMI_PATH, *args, *[f"{i}={kwargs[i]}" for i in kwargs]]).decode(errors="ignore")
+        except: pass
+    return ""
 
-def replaces(s: Optional[str], d: Dict[str, str]) -> Optional[str]:
-    if s != None:
-        for i in d.items():
-            s = s.replace(i[0], i[1])
-        return s
-
-def startswiths(string: str, sl: List[str]) -> bool:
-    for i in sl:
-        if string.startswith(i):
-            return True
-    return False
-
-def spliter(string: Optional[str], char: Any) -> List[str]:
-    try:
-        return string.split(char)
-    except:
-        pass
-
-# ! Функция запросов к WMIC
-def request(
-    method: str,
-    treq: Optional[Literal["GET", "LIST"]]=None,
-    data: Optional[Union[List[str], str]]=None,
-    form: Optional[Literal["VALUE", "CSV"]]=None
-) -> str:
-    form = form or "VALUE"
-    treq = treq or "LIST"
-    if data is not None:
-        req = subprocess.check_output(
-            "wmic {0} {2} {1} /format:{3}"\
-                .format(
-                    method,
-                    (",".join(data) if isinstance(data, list) else data),
-                    treq,
-                    form
-                )
-        )
-    else:
-        req = subprocess.check_output(f"wmic {method} {treq} /format:{form}")
-    return req.decode(errors="ignore")
-
-def request_nsmi(qgpu: List[str], form: List[str]) -> str:
-    return subprocess.check_output(
-        [
-            units.NVIDIA_SMI_PATH,
-            "--query-gpu={}".format(",".join(qgpu)),
-            "--format={}".format(",".join(form))
-        ]
-    ).decode(errors="ignore")
-
-def request_nsmi2(qgpu: List[str]) -> List[Dict[str, Any]]:
-    data = []
+def nsmi2(*args: str) -> List[Dict[str, Any]]:
+    out = []
     try:
         from pynvml.smi import nvidia_smi
         nsmi = nvidia_smi.getInstance()
-        gpus = nsmi.DeviceQuery(",".join(qgpu))
-        for i in gpus["gpu"]:
-            data.append(
-                {**i, "driver_version": gpus["driver_version"]}
-            )
-    except:
-        pass
-    return data
+        gpus = nsmi.DeviceQuery(",".join(args))
+        for i in gpus["gpu"]: out.append({**i, "driver_version": gpus["driver_version"]})
+    except: pass
+    return out
 
-def request_t_cpu() -> str:
-    subprocess.check_output([sys.executable, units.T_CPU_PATH]);req_file_path = os.path.join(os.path.dirname(units.T_CPU_PATH), "req.log")
-    with open(req_file_path, "rb") as file:
-        data = file.read()
-    os.remove(req_file_path)
-    return data.decode(errors="ignore")
+def tcpu() -> str:
+    subprocess.check_output([sys.executable, units.T_CPU_PATH])
+    with open(os.path.join(os.path.dirname(units.T_CPU_PATH), "req.log"), "rb") as file:
+        return file.read().decode(errors="ignore")
 
 # ! Функции определения
-def get_mff(code: int) -> str:
-    return units.NT_TYPES.MEMORY_FORM_FACTOR[code]
-
-def get_mtype(code: int) -> str:
-    return units.NT_TYPES.MEMORY_TYPE[code]
-
-def get_vmtype(code: int) -> str:
-    return units.NT_TYPES.VIDEO_MEMORY_TYPE[code]
-
-def get_varch(code: int) -> str:
-    return units.NT_TYPES.VIDEO_ARCHITECTURE[code]
-
-def get_vaval(code: int) -> str:
-    return units.NT_TYPES.VIDEO_ALAILABILITY[code]
-
-def tnvv(value: Optional[str]) -> str:
+def get_mff(code: int) -> str: return units.NT.MEMORY_FORM_FACTOR.get(code, None)
+def get_mtype(code: int) -> str: return units.NT.MEMORY_TYPE.get(code, None)
+def get_vmtype(code: int) -> str: return units.NT.VIDEO_MEMORY_TYPE.get(code, None)
+def get_varch(code: int) -> str: return units.NT.VIDEO_ARCHITECTURE.get(code, None)
+def get_vaval(code: int) -> str: return units.NT.VIDEO_ALAILABILITY.get(code, None)
+def chrct(code: int) -> str:
+    if 40 <= code <= 47:
+        return f"<BIOS{code}>"
+    elif 48 <= code <= 63:
+        return f"<OS{code}>"
+    else:
+        return units.NT.BIOS_CHARACTERISTICS.get(code, None)
+def tnvv(value: Optional[str]) -> Optional[str]:
     if value is not None:
-        if value in units.NVIDIA_VALUES_EXCEPTIONS:
+        if value in units.NONE_TYPE_EXCEPTIONS:
             return None
     return value
-
-def chrct(code: int) -> str:
-    return units.NT_TYPES.BIOS_CHARACTERISTICS[code]
-
 def get_nv_actiovitions(code: Optional[str]) -> Optional[bool]:
     if code is not None:
         if code == "Enabled":
@@ -128,348 +59,179 @@ def get_nv_actiovitions(code: Optional[str]) -> Optional[bool]:
         elif code == "Disabled":
             return False
 
-# ! Get-функции
+# ! Parsers
 def get_cpu() -> Dict[str, Any]:
-    info = cpuinfo.get_cpu_info()
+    info = dict(cpuinfo.get_cpu_info())
+    try: Hz = round(info.get("hz_actual", 0)[0] / 1e9, 1)
+    except: Hz = 0
     return {
-        "name": info["brand_raw"],
-        "model": info["model"],
-        "family": info["family"],
-        "stepping": info["stepping"],
-        "architecture": info["arch"],
-        "bits": int(info["bits"]),
-        "frequency": round(info["hz_actual"][0] / 1e9, 1),
-        "cores_count": info["count"],
+        "name": info.get("brand_raw", None),
+        "model": info.get("model", None),
+        "family": info.get("family", None),
+        "stepping": info.get("stepping", None),
+        "architecture": info.get("arch", None),
+        "bits": info.get("bits", None),
+        "frequency": Hz,
+        "cores_count": info.get("count", None),
         "cache": {
-            "l2_size": ek("l2_cache_size", info)[1],
-            "l3_size": ek("l3_cache_size", info)[1]
+            "l2_size": info.get("l2_cache_size", None),
+            "l3_size": info.get("l3_cache_size", None)
         },
-        "flags": [i.upper() for i in info["flags"]]
+        "flags": [i.upper() for i in info.get("flags", [])]
     }
 
 def get_cpu_status() -> Dict[str, List[Dict[str, Any]]]:
-    d = Converter.t_cpu_data_to_dict(request_t_cpu())
-    dd, i = {"cores": []}, 1
-    dd["package_temperature"] = Converter.eks(d, ["cpu", "temperature", "package"])[1]
-    dd["total_load"] = Converter.eks(d, ["cpu", "load", "total"])[1]
-    if Converter.eks(d, ["cpu", "load"])[1] is not None:
-        while True:
-            if i in Converter.eks(d, ["cpu", "load"])[1]:
-                dd["cores"].append(
-                    {
-                        "index": i,
-                        "load": Converter.eks(d, ["cpu", "load", i])[1],
-                        "temperature": Converter.eks(d, ["cpu", "temperature", i])[1],
-                        "clock": Converter.eks(d, ["cpu", "clock", i])[1]
-                    }
-                )
-            else:
-                break
-            i += 1
-    return dd
+    d, out, c = conv.from_tcpu_data(tcpu()), {"cores": []}, 1
+    out["total_load"] = d.get("cpu.cpu_total.load")
+    out["package_temperature"] = d.get("cpu.cpu_package.temperature")
+    while True:
+        if d.get(f"cpu.cpu_core_#{c}.load") is not None:
+            out["cores"].append(
+                {
+                    "index": c,
+                    "load": d.get(f"cpu.cpu_core_#{c}.load"),
+                    "temperature": d.get(f"cpu.cpu_core_#{c}.temperature"),
+                    "clock": d.get(f"cpu.cpu_core_#{c}.clock")
+                }
+            )
+        else: break
+        c += 1
+    return out
 
 def get_ram() -> List[Dict[str, Any]]:
-    ld, uld = Converter.value_to_dict(request("MEMORYCHIP")), []
-    for i in ld:
-        uld.append(
+    d, out = conv.from_values(wmic("MEMORYCHIP", "LIST", FORMAT="VALUE")), []
+    for i in d:
+        out.append(
             {
-                "device_location": ek("DeviceLocator", i)[1],
-                "form_factor": get_mff(
-                    Converter.str_to_int(
-                        ek("FormFactor", i)[1]
-                    )
-                ),
-                "type": get_mtype(
-                    Converter.str_to_int(
-                        ek("MemoryType", i)[1]
-                    )
-                ),
-                "serial_number": Converter.sn(
-                    ek("SerialNumber", i)[1]
-                ),
-                "part_number": replaces(
-                    ek("PartNumber", i)[1],
-                    {" ": ""}
-                ),
-                "capacity": Converter.str_to_int(
-                    ek("Capacity", i)[1]
-                ),
-                "frequency": Converter.str_to_int(
-                    ek("Speed", i)[1]
-                ),
-                "data_width": Converter.str_to_int(
-                    ek("DataWidth", i)[1]
-                )
+                "device_location": i.get("DeviceLocator", None),
+                "form_factor": get_mff(conv.to_int(i.get("FormFactor", None))),
+                "type": get_mtype(conv.to_int(i.get("MemoryType", None))),
+                "serial_number": conv.sn(i.get("SerialNumber", None)),
+                "part_number": conv.replaces(i.get("PartNumber", None), {" ": ""}),
+                "capacity": conv.to_int(i.get("Capacity", None)),
+                "frequency": conv.to_int(i.get("Speed", None)),
+                "data_width": conv.to_int(i.get("DataWidth", None))
             }
         )
-    return uld
+    return out
 
 def get_monitors() -> List[Dict[str, Any]]:
     return [
         {
-            "name": replaces(i.name, {"\\": "", ".": ""}),
+            "name": conv.replaces(i.name, {"\\": "", ".": ""}),
             "size": (i.width, i.height),
             "size_mm": (i.width_mm, i.height),
             "is_primary": i.is_primary
         } for i in screeninfo.get_monitors()
     ]
 
-def get_videocards() -> List[Dict[str, Any]]:
-    ld, uld = Converter.value_to_dict(
-        request(
-            "path win32_VideoController", "GET", "Name,VideoProcessor,AdapterRAM,Availability,AdapterCompatibility,VideoArchitecture,VideoMemoryType,DriverDate,DriverVersion"
-        )
-    ), []
-    for i in ld:
-        uld.append(
+def get_nvidia_videocards_pynvml() -> List[Dict[str, Any]]:
+    d, out = nsmi2('index', 'uuid', 'utilization.gpu', 'driver_version', 'name', 'gpu_serial', 'display_active', 'display_mode', 'memory.total', 'memory.used', 'memory.free', 'temperature.gpu', 'fan.speed'), []
+    for idx, i in enumerate(d):
+        out.append(
             {
-                "name": ek("Name", i)[1],
-                "model": ek("VideoProcessor", i)[1],
-                "company": ek("AdapterCompatibility", i)[1],
-                "driver_version": ek("DriverVersion", i)[1],
-                "driver_date": Converter.windate_to_datetime(
-                    ek("DriverDate", i)[1]
-                ),
-                "memory_capacity": Converter.str_to_int(
-                    ek("AdapterRAM", i)[1]
-                ),
-                "memory_type": get_vmtype(
-                    Converter.str_to_int(
-                        ek("VideoMemoryType", i)[1]
-                    )
-                ),
-                "architecture": get_varch(
-                    Converter.str_to_int(
-                        ek("VideoArchitecture", i)[1]
-                    )
-                ),
-                "availability": get_vaval(
-                    Converter.str_to_int(
-                        ek("Availability", i)[1]
-                    )
-                )
+                "name": i.get("product_name", None),
+                "id": idx,
+                "uuid": i.get("uuid", None),
+                "driver_version": i.get("driver_version", None),
+                "serial_number": conv.sn(i.get("serial", None)),
+                "display_active": get_nv_actiovitions(i.get("display_active", None)),
+                "display_mode": get_nv_actiovitions(i.get("display_mode", None)),
+                "status": {
+                    "utilization": i.get("utilization", {}).get("gpu_util", None),
+                    "memory_total": i.get("total", None),
+                    "memory_used": i.get("used", None),
+                    "memory_free": i.get("free", None),
+                    "temperature": i.get("temperature", {}).get("gpu_temp", None),
+                    "fan_speed": conv.to_int(i.get("fan_speed", None))
+                }
             }
         )
-    return uld
+    return out
 
-def get_nvidia_videocards2() -> List[Dict[str, Any]]:
-    nvidia_videocards = []
-    try:
-        nvgpus = request_nsmi2(
-            [
-                "index",
-                "uuid",
-                "utilization.gpu",
-                "driver_version",
-                "name",
-                "gpu_serial",
-                "display_active",
-                "display_mode",
-                "memory.total",
-                "memory.used",
-                "memory.free",
-                "temperature.gpu",
-                "fan.speed"
-            ]
-        )
-        for idx, nvgpu in enumerate(nvgpus):
-            memory_usage = ek("fb_memory_usage", nvgpu)[1]
-            nvidia_videocards.append(
-                {
-                    "name": ek("product_name", nvgpu)[1],
-                    "id": idx,
-                    "uuid": ek("uuid", nvgpu)[1],
-                    "driver_version": ek("driver_version", nvgpu)[1],
-                    "serial_number": Converter.sn(
-                        ek("serial", nvgpu)[1]
-                    ),
-                    "display_active": get_nv_actiovitions(
-                        ek("display_active", nvgpu)[1]
-                    ),
-                    "display_mode": get_nv_actiovitions(
-                        ek("display_mode", nvgpu)[1]
-                    ),
-                    "status": {
-                        "utilization": ek(
-                            "utilization",
-                            ek("gpu_util", nvgpu)[1]
-                        )[1],
-                        "memory_total": ek("total", memory_usage)[1],
-                        "memory_used": ek("used", memory_usage)[1],
-                        "memory_free": ek("free", memory_usage)[1],
-                        "temperature": ek(
-                            "gpu_temp",
-                            ek("temperature", nvgpu)[1]
-                        )[1],
-                        "fan_speed": None if ek("fan_speed", nvgpu)[1] == "N/A" else ek("fan_speed", nvgpu)[1]
-                    }
+def get_nvidia_videocards_nsmi() -> List[Dict[str, Any]]:
+    d, out = conv.from_csv(nsmi("--query-gpu=index,uuid,utilization.gpu,driver_version,name,gpu_serial,display_active,display_mode,memory.total,memory.used,memory.free,temperature.gpu,fan.speed", "--format=csv,noheader,nounits"), header=["index", "uuid", "utilization.gpu", "driver_version", "name", "gpu_serial", "display_active", "display_mode", "memory.total", "memory.used", "memory.free", "temperature.gpu", "fan.speed"], sep=", ", end="\r\n"), []
+    for i in d:
+        out.append(
+            {
+                "id": conv.to_int(i.get("index", None)),
+                "name": i.get("name", None),
+                "uuid": i.get("uuid", None),
+                "driver_version": i.get("driver_version", None),
+                "serial_number": conv.sn(i.get("gpu_serial", None)),
+                "display_active": tnvv(i.get("display_active", None)),
+                "display_mode": tnvv(i.get("display_mode", None)),
+                "status": {
+                    "utilization": conv.to_int(i.get("utilization.gpu", None)),
+                    "memory_total": conv.to_int(i.get("memory.total", None)),
+                    "memory_used": conv.to_int(i.get("memory.used", None)),
+                    "memory_free": conv.to_int(i.get("memory.free", None)),
+                    "temperature": conv.to_int(i.get("temperature.gpu", None)),
+                    "fan_speed": conv.to_int(i.get("fan.speed", None))
                 }
-            )
-    except:
-        pass
-
-    return nvidia_videocards
+            }
+        )
+    return out
 
 def get_nvidia_videocards() -> List[Dict[str, Any]]:
-    nvidia_videocards = []
-    try:
-        info = \
-        Converter.from_csv(
-            request_nsmi(
-                [
-                    "index",
-                    "uuid",
-                    "utilization.gpu",
-                    "driver_version",
-                    "name",
-                    "gpu_serial",
-                    "display_active",
-                    "display_mode",
-                    "memory.total",
-                    "memory.used",
-                    "memory.free",
-                    "temperature.gpu",
-                    "fan.speed"
-                ],
-                ["csv", "noheader", "nounits"]
-            ), 
-            ", ",
-            "\r\n"
+    if len(data:=get_nvidia_videocards_nsmi()) == 0: data = get_nvidia_videocards_pynvml()
+    return data
+
+def get_videocards() -> List[Dict[str, Any]]:
+    d, out = conv.from_values(wmic("path", "win32_VideoController", "GET", "Name,VideoProcessor,AdapterRAM,Availability,AdapterCompatibility,VideoArchitecture,VideoMemoryType,DriverDate,DriverVersion", FORMAT="VALUE")), []
+    for i in d:
+        out.append(
+            {
+                "name": i.get("Name", None),
+                "model": i.get("VideoProcessor", None),
+                "company": i.get("AdapterCompatibility", None),
+                "driver_version": i.get("DriverVersion", None),
+                "driver_date": conv.windate_to_datetime(i.get("DriverDate", None)),
+                "memory_capacity": conv.to_int(i.get("AdapterRAM", None)),
+                "memory_type": get_vmtype(conv.to_int(i.get("VideoMemoryType", None))),
+                "architecture": get_varch(conv.to_int(i.get("VideoArchitecture", None))),
+                "availability": get_vaval(conv.to_int(i.get("Availability", None)))
+            }
         )
-        for i in info:
-            nvidia_videocards.append(
-                {
-                    "name": ek(4, i)[1],
-                    "id": Converter.str_to_int(
-                        ek(0, i)[1]
-                    ),
-                    "uuid": ek(1, i)[1],
-                    "driver_version": ek(3, i)[1],
-                    "serial_number": Converter.sn(
-                        tnvv(
-                            ek(5, i)[1]
-                        )
-                    ),
-                    "display_active": tnvv(
-                        ek(6, i)[1]
-                    ),
-                    "display_mode": tnvv(
-                        ek(7, i)[1]
-                    ),
-                    "status": {
-                        "utilization": Converter.str_to_int(
-                            tnvv(
-                                ek(2, i)[1]
-                            )
-                        ),
-                        "memory_total": Converter.str_to_int(
-                            ek(8, i)[1]
-                        ),
-                        "memory_used": Converter.str_to_int(
-                            ek(9, i)[1]
-                        ),
-                        "memory_free": Converter.str_to_int(
-                            ek(10, i)[1]
-                        ),
-                        "temperature": Converter.str_to_int(
-                            ek(11, i)[1]
-                        ),
-                        "fan_speed": Converter.str_to_int(
-                            ek(12, i)[1]
-                        )
-                    }
-                }
-            )
-    except:
-        pass
-    if len(nvidia_videocards) == 0:
-        return get_nvidia_videocards2()
-    return nvidia_videocards
+    return out
 
 def get_motherboard() -> Dict[str, Any]:
-    info = Converter.value_to_dict(request(
-            "BASEBOARD", "GET", "Name,PoweredOn,Product,Removable,Replaceable,RequiresDaughterBoard,SerialNumber,Tag,Version,HostingBoard,HotSwappable,Manufacturer"
-        )
-    )[0]
+    info = conv.from_values(wmic("BASEBOARD", "GET", "Name,PoweredOn,Product,Removable,Replaceable,RequiresDaughterBoard,SerialNumber,Tag,Version,HostingBoard,HotSwappable,Manufacturer", FORMAT="VALUE"))[0]
     return {
-        "name": ek("Name", info)[1],
-        "tag": ek("Tag", info)[1],
-        "version": ek("Version", info)[1],
-        "product": ek("Product", info)[1],
-        "serial_number": Converter.sn(
-            ek("SerialNumber", info)[1]
-        ),
-        "manufacturer": ek("Manufacturer", info)[1],
-        "power_on": Converter.str_to_bool(
-            ek("PoweredOn", info)[1]
-        ),
-        "removable": Converter.str_to_bool(
-            ek("Removable", info)[1]
-        ),
-        "replaceable": Converter.str_to_bool(
-            ek("Replaceable", info)[1]
-        ),
-        "rdb": Converter.str_to_bool(
-            ek("RequiresDaughterBoard", info)[1]
-        ),
-        "hosting_board": Converter.str_to_bool(
-            ek("HostingBoard", info)[1]
-        ),
-        "hot_swappable": Converter.str_to_bool(
-            ek("HotSwappable", info)[1]
-        )
+        "name": info.get("Name", None),
+        "tag": info.get("Tag", None),
+        "version": info.get("Version", None),
+        "product": info.get("Product", None),
+        "serial_number": conv.sn(info.get("SerialNumber", None)),
+        "manufacturer": info.get("Manufacturer", None),
+        "power_on": conv.to_bool(info.get("PoweredOn", None)),
+        "removable": conv.to_bool(info.get("Removable", None)),
+        "replaceable": conv.to_bool(info.get("Replaceable", None)),
+        "rdb": conv.to_bool(info.get("RequiresDaughterBoard", None)),
+        "hosting_board": conv.to_bool(info.get("HostingBoard", None)),
+        "hot_swappable": conv.to_bool(info.get("HotSwappable", None))
     }
 
 def get_bios() -> Dict[str, Any]:
-    info = Converter.value_to_dict(request(
-            "BIOS", "LIST", "FULL"
-        )
-    )[0]
-    try:
-        langs = Converter.winlang_to_tuple(list(eval(info["ListOfLanguages"])))
-        clang = Converter.winlang_to_tuple(info["CurrentLanguage"])
-    except:
-        langs, clang = [], None
-    try:
-        characteristics = list(set([chrct(i).upper() for i in eval(ek("BiosCharacteristics", info)[1])]))
-    except:
-        characteristics = []
-    
+    info = conv.from_values(wmic("BIOS", "LIST", FORMAT="VALUE"))[0]
+    try: langs = conv.winlang_to_tuple(conv.removes(conv.replaces(info.get("ListOfLanguages", ""), {";": ",", "{": "", "}": "", "\"": ""}).split(","), [""]))
+    except: langs = []
+    try: clang = conv.winlang_to_tuple(info.get("CurrentLanguage", ""))
+    except: clang = None
+    try: characteristics = [chrct(i) for i in eval(info.get("BiosCharacteristics", "{}").replace(";", ","))]
+    except: characteristics = []
     return {
-        "name": ek("Name", info)[1],
-        "manufacturer": ek("Manufacturer", info)[1],
-        "release_date": Converter.windate_to_datetime(
-            ek("ReleaseDate", info)[1]
-        ),
+        "name": info.get("Name", None),
+        "manufacturer": info.get("Manufacturer", None),
+        "release_date": conv.windate_to_datetime(info.get("ReleaseDate", None)),
         "languages": langs,
         "current_language": clang,
-        "is_primary": Converter.str_to_bool(
-            ek("PrimaryBIOS", info)[1]
-        ),
-        "serial_number": Converter.sn(
-            ek("SerialNumber", info)[1]
-        ),
-        "version": ek("Version", info)[1],
-        "smbios_version": ek("SMBIOSBIOSVersion", info)[1],
-        "smbios_major_version": ek("SMBIOSMajorVersion", info)[1],
-        "smbios_minor_version": ek("SMBIOSMinorVersion", info)[1],
-        "smbios_present": Converter.str_to_bool(
-            ek("SMBIOSPresent", info)[1]
-        ),
+        "is_primary": conv.to_bool(info.get("PrimaryBIOS", None)),
+        "serial_number": conv.sn(info.get("SerialNumber", None)),
+        "version": info.get("Version", None),
+        "smbios_version": info.get("SMBIOSBIOSVersion", None),
+        "smbios_major_version": info.get("SMBIOSMajorVersion", None),
+        "smbios_minor_version": info.get("SMBIOSMinorVersion", None),
+        "smbios_present": conv.to_bool(info.get("SMBIOSPresent", None)),
         "characteristics": characteristics
     }
-
-def get_sound_device() -> List[Dict[str, Any]]:
-    info, sds = Converter.value_to_dict(request("SOUNDDEV", "LIST", "FULL")), []
-    for i in info:
-        sds.append(
-            {   
-                "name": ek("Name", i)[1],
-                "product_name": ek("ProductName", i)[1],
-                "manufacturer": ek("Manufacturer", i)[1],
-                "device_ids": ek("DeviceID", i)[1],
-                "pnp_device_ids": ek("PNPDeviceID", i)[1],
-                "pms": Converter.str_to_bool(ek("PowerManagementSupported", i)[1])
-            }
-        )
-    return sds

@@ -25,7 +25,10 @@ console.rule("MONITORS INFO")
 console.print(pciw.get_monitors_info())
 
 console.rule("MOTHERBOARD INFO")
-console.print(pciw.get_motherboard_info())
+try:
+    console.print(pciw.get_motherboard_info())
+except:
+    console.print_exception(word_wrap=True, show_locals=True)
 
 console.rule("BIOS INFO")
 console.print(pciw.get_bios_info())
@@ -35,6 +38,3 @@ try:
     console.print(pciw.get_ngpu_info())
 except pciw.NvidiaSMIError:
     console.print("[red]Error[/]: [green]The NVIDIA driver is not installed![/]")
-
-console.rule("SOUND DEVICES")
-console.print(pciw.get_sound_device_info())

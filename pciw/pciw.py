@@ -8,13 +8,10 @@ from . import SupportHandler as sh
 class NvidiaSMIError(Exception):
     """Called if there is an error parsing information from NVIDIA-SMI, usually a problem in the absence of NVIDIA Corporation"""
     def __init__(self, *args) -> None:
-        if len(args) != 0:
-            self.msg = " ".join([str(i) for i in args])
-        else:
-            self.msg = "NVIDIA-SMI couldn't find 'nvml.dll' library in your system"
+        if len(args) != 0: self.msg = " ".join([str(i) for i in args])
+        else: self.msg = "NVIDIA-SMI couldn't find 'nvml.dll' library in your system"
 
-    def __str__(self) -> str:
-        return self.msg
+    def __str__(self) -> str: return self.msg
 
 # ! Инициализация
 supporter = sh.Supported()
@@ -39,26 +36,19 @@ def __Ct(F: int) -> int:
 def __gt(value: int, tp: Optional[Literal["C", "F"]]=None) -> Optional[Temperature]:
     tp = tp or "C"
     try:
-        if tp == "C":
-            return Temperature(value, __Ft(value))
-        elif tp == "F":
-            return Temperature(__Ct(value), value)
-    except:
-        pass
+        if tp == "C": return Temperature(value, __Ft(value))
+        elif tp == "F": return Temperature(__Ct(value), value)
+    except: pass
 
 def _gV(version: Optional[str]) -> Optional[Version]:
-    if version is not None:
-        return Version(version)
+    if version is not None: return Version(version)
 
 # ! Открытые функции
 @supporter.add_support(["Windows", "Linux"])
 def get_cpu_info() -> CPU:
     """Returns the `CPU` dataclass containing information about the CPU"""
     cpu_info = Parser.get_cpu()
-    cache = CPUCache(
-        cpu_info["cache"]["l2_size"],
-        cpu_info["cache"]["l3_size"]
-    )
+    cache = CPUCache(cpu_info["cache"]["l2_size"], cpu_info["cache"]["l3_size"])
     del cpu_info["cache"]
     return CPU(**cpu_info, cache=cache)
 
@@ -138,7 +128,3 @@ def get_ngpu_info() -> List[NGPU]:
     except Parser.subprocess.CalledProcessError:
         raise NvidiaSMIError()
     return ngpus
-
-@supporter.add_support(["Windows"], [], errors="view")
-def get_sound_device_info() -> List[SoundDevice]:
-    return [SoundDevice(**i) for i in Parser.get_sound_device()]
