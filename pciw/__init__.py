@@ -12,4 +12,4 @@ from .pciw import \
     RAMBank, BIOS, Monitor, Motherboard, SMBIOS
 
 __name__ = "pciw.py"
-__version__ = "0.8.6"
+__version__ = "0.9.0"
