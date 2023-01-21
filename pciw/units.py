@@ -1,36 +1,74 @@
 import os
 import platform
-from .Converter import exists_key
 
 # ! Для функций
-SERIAL_NUMBER_EXCEPTIONS = [
-    "To be filled",
-    "Default",
-    "N/A"
-]
-NVIDIA_VALUES_EXCEPTIONS = [
-    "[Not Supported]"
-]
-# ! Работа с путями
+NONE_TYPE_EXCEPTIONS = ["To be filled", "Default", "N/A", "[Not Supported]"]
+
+# ! Определение путей
 NVIDIA_SMI_PATH_SUPPORTED = {"Windows": os.path.join(os.path.dirname(__file__), "data\\nsmi\\Windows\\nsmi.exe")}
-NVIDIA_SMI_PATH: str = exists_key(platform.system(), NVIDIA_SMI_PATH_SUPPORTED)[1]
 T_CPU_PATH_SUPPORTED = {"Windows": os.path.join(os.path.dirname(__file__), "data\\t_cpu\\Windows\\parser.py")}
-T_CPU_PATH: str = exists_key(platform.system(), T_CPU_PATH_SUPPORTED)[1]
-# ! Для определения типа
-class NT_TYPES:
-    MEMORY_TYPE = [
-        None, "Other", "DRAM", "Synchronous DRAM", "Cache DRAM",
-        "EDO", "EDRAM", "VRAM", "SRAM", "RAM", "ROM", "Flash",
-        "EEPROM", "FEPROM", "EPROM", "CDRAM", "3DRAM", "SDRAM",
-        "SGRAM", "RDRAM", "DDR", "DDR2", "DDR2 FB-DIMM", None,
-        "DDR3", "FBD2", "DDR4"
-    ]
-    MEMORY_FORM_FACTOR = [
-        None, "Other", "SIP", "DIP", "ZIP", "SOJ", "Proprietary",
-        "SIMM", "DIMM", "TSOP", "PGA","RIMM", "SODIMM", "SRIMM",
-        "SMD", "SSMP", "QFP", "TQFP", "SOIC", "LCC", "PLCC", "BGA",
-        "FPBGA", "LGA", "FB-DIMM"
-    ]
+
+NVIDIA_SMI_PATH: str = NVIDIA_SMI_PATH_SUPPORTED.get(platform.system(), None)
+T_CPU_PATH: str = T_CPU_PATH_SUPPORTED.get(platform.system(), None)
+
+# ! Для определения значений
+class NT:
+    MEMORY_TYPE = {
+        0: None,
+        1: 'Other',
+        2: 'DRAM',
+        3: 'Synchronous DRAM',
+        4: 'Cache DRAM',
+        5: 'EDO',
+        6: 'EDRAM',
+        7: 'VRAM',
+        8: 'SRAM',
+        9: 'RAM',
+        10: 'ROM',
+        11: 'Flash',
+        12: 'EEPROM',
+        13: 'FEPROM',
+        14: 'EPROM',
+        15: 'CDRAM',
+        16: '3DRAM',
+        17: 'SDRAM',
+        18: 'SGRAM',
+        19: 'RDRAM',
+        20: 'DDR',
+        21: 'DDR2',
+        22: 'DDR2 FB-DIMM',
+        23: None,
+        24: 'DDR3',
+        25: 'FBD2',
+        26: 'DDR4'
+    }
+    MEMORY_FORM_FACTOR = {
+        0: None,
+        1: 'Other',
+        2: 'SIP',
+        3: 'DIP',
+        4: 'ZIP',
+        5: 'SOJ',
+        6: 'Proprietary',
+        7: 'SIMM',
+        8: 'DIMM',
+        9: 'TSOP',
+        10: 'PGA',
+        11: 'RIMM',
+        12: 'SODIMM',
+        13: 'SRIMM',
+        14: 'SMD',
+        15: 'SSMP',
+        16: 'QFP',
+        17: 'TQFP',
+        18: 'SOIC',
+        19: 'LCC',
+        20: 'PLCC',
+        21: 'BGA',
+        22: 'FPBGA',
+        23: 'LGA',
+        24: 'FB-DIMM'
+    }
     VIDEO_MEMORY_TYPE = {
         1: "Other",
         2: None,

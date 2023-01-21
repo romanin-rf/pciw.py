@@ -53,7 +53,8 @@ def removes(l: list, ldv: list) -> list:
 
 def replaces(s: str, d: Dict[str, str]) -> str:
     for i in d.items():
-        s = s.replace(i[0], i[1])
+        try: s = s.replace(i[0], i[1])
+        except: pass
     return s
 
 def startswiths(string: str, sl: List[str]) -> bool:
@@ -61,32 +62,6 @@ def startswiths(string: str, sl: List[str]) -> bool:
         if string.startswith(i):
             return True
     return False
-
-def value_to_dict(string: str) -> List[Dict[str, Optional[str]]]:
-    data: List[List[str]] = [
-        i.split("\r\r\n") for i in removes(
-            string\
-                .replace("\r\r\n\r\r\n\r\r\n\r\r\n", "")\
-                .split("\r\r\n\r\r\n"),
-            [""]
-        )
-    ]
-    do = []
-    for table in data:
-        d = {}
-        for line in table:
-            rd = line.split("=")
-            if rd[0].replace(" ", "") != "":
-                d[rd[0]] = rd[1]\
-                    if (
-                        rd[0].replace(" ", "") != ""
-                    ) else None
-        do.append(d)
-    for idx, item in enumerate(do):
-        for key in item.keys():
-            if item[key].replace(" ", "") == "":
-                do[idx][key] = None
-    return do
 
 def str_to_bool(string: str) -> Optional[bool]:
     string = string.lower().replace(" ", "")
@@ -140,17 +115,18 @@ def winlang_to_tuple(string: Union[List[str], str]) -> Optional[Union[List[Tuple
 
 def sn(string: Optional[str]) -> Optional[str]:
     if string is not None:
-        if not startswiths(string, units.SERIAL_NUMBER_EXCEPTIONS):
+        if not startswiths(string, units.NONE_TYPE_EXCEPTIONS):
             return string
 
-def from_csv(data: str, dvalue: str, dline: str) -> List[List[str]]:
-    data_values = []
-    lines = removes(data.split(dline), [""])
-    for i in lines:
-        data_values.append(
-            i.split(dvalue)
-        )
-    return data_values
+def from_csv(data: str, *, sep=",", end="\r\r\n") -> List[Dict[str, str]]:
+    d: List[List[str]] = [i.split(sep) for i in removes(data.split(end),[""])]
+    header = d[0] ; d = d[1:]
+    out = []
+    for dl in d:
+        l = {}
+        for idx, i in enumerate(dl): l[header[idx]] = i
+        out.append(l)
+    return out
 
 def t_cpu_data_to_dict(s: str) -> Dict[str, Dict[str, Dict[Any, Any]]]:
     data = {}

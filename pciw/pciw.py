@@ -55,10 +55,7 @@ def _gV(version: Optional[str]) -> Optional[Version]:
 def get_cpu_info() -> CPU:
     """Returns the `CPU` dataclass containing information about the CPU"""
     cpu_info = Parser.get_cpu()
-    cache = CPUCache(
-        cpu_info["cache"]["l2_size"],
-        cpu_info["cache"]["l3_size"]
-    )
+    cache = CPUCache(cpu_info["cache"]["l2_size"], cpu_info["cache"]["l3_size"])
     del cpu_info["cache"]
     return CPU(**cpu_info, cache=cache)
 
@@ -138,7 +135,3 @@ def get_ngpu_info() -> List[NGPU]:
     except Parser.subprocess.CalledProcessError:
         raise NvidiaSMIError()
     return ngpus
-
-@supporter.add_support(["Windows"], [], errors="view")
-def get_sound_device_info() -> List[SoundDevice]:
-    return [SoundDevice(**i) for i in Parser.get_sound_device()]
