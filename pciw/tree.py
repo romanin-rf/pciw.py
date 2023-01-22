@@ -33,7 +33,6 @@ class Tree:
             d = self.children[i].to_dict()
             for _ in d:
                 l[self.sep.join([i, _])] = d[_]
-                print(f"* to_dict: {i}.{_}")
         return l
     
     def set(self, key: str, value: Any):

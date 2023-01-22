@@ -84,6 +84,8 @@ def get_cpu_status() -> Dict[str, List[Dict[str, Any]]]:
     d, out, c = conv.from_tcpu_data(tcpu()), {"cores": []}, 1
     out["total_load"] = d.get("cpu.cpu_total.load")
     out["package_temperature"] = d.get("cpu.cpu_package.temperature")
+    out["package_power"] = d.get("cpu.cpu_package.power")
+    out["cores_power"] = d.get("cpu.cpu_cores.power")
     while True:
         if d.get(f"cpu.cpu_core_#{c}.load") is not None:
             out["cores"].append(
