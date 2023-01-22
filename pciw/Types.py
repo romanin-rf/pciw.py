@@ -69,6 +69,8 @@ class CPUStatus:
     cores: List[CPUCore]
     total_load: float
     package_temperature: Temperature
+    package_power: float
+    cores_power: float
 
 @dataclass
 class CPUCache:

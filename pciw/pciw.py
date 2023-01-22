@@ -1,7 +1,7 @@
 import platform
-from .Types import *
 from typing import Literal, Optional, List
 # * Локальные импорт
+from .Types import *
 from . import SupportHandler as sh
 
 # ! Исключения
