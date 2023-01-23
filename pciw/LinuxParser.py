@@ -23,18 +23,6 @@ def nsmi2(*args: str) -> List[Dict[str, Any]]:
     return out
 
 # ! Функции определения
-def get_mff(code: int) -> str: return units.NT.MEMORY_FORM_FACTOR.get(code, None)
-def get_mtype(code: int) -> str: return units.NT.MEMORY_TYPE.get(code, None)
-def get_vmtype(code: int) -> str: return units.NT.VIDEO_MEMORY_TYPE.get(code, None)
-def get_varch(code: int) -> str: return units.NT.VIDEO_ARCHITECTURE.get(code, None)
-def get_vaval(code: int) -> str: return units.NT.VIDEO_ALAILABILITY.get(code, None)
-def chrct(code: int) -> str:
-    if 40 <= code <= 47:
-        return f"<BIOS{code}>"
-    elif 48 <= code <= 63:
-        return f"<OS{code}>"
-    else:
-        return units.NT.BIOS_CHARACTERISTICS.get(code, None)
 def tnvv(value: Optional[str]) -> Optional[str]:
     if value is not None:
         if value in units.NONE_TYPE_EXCEPTIONS:
@@ -49,7 +37,7 @@ def get_nv_actiovitions(code: Optional[str]) -> Optional[bool]:
 
 # ! Функционал
 def get_cpu() -> Dict[str, Any]:
-    info = cpuinfo.get_cpu_info()
+    info = dict(cpuinfo.get_cpu_info())
     try: freq = round(info.get("hz_actual", None)[0] / 1e9, 1)
     except: freq = None
     return {
