@@ -115,7 +115,7 @@ def get_bios_info() -> BIOS:
     info["version"] = _gV(info["version"].replace(" ", ""))
     return BIOS(**info, smbios=smbios)
 
-@supporter.add_support(["Windows"], [])
+@supporter.add_support(["Windows", "Linux"], [])
 def get_ngpu_info() -> List[NGPU]:
     """Returns the `NGPU` dataclass, containing video card information (ONLY FOR NVIDIA VIDEO CARDS)"""
     ngpus: List[NGPU] = []
