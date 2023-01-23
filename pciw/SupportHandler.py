@@ -25,7 +25,7 @@ class Supported:
         default_return: Optional[Any]=None,
         errors: Optional[Literal["ignore", "view"]]=None
     ) -> Any:
-        errors = errors or "ignore"
+        errors = errors or "view"
         def adder(method):
             self.__add_method(method, supported)
             def wrapper(*args, **kwargs):
