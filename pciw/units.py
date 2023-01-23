@@ -9,11 +9,13 @@ NONE_TYPE_EXCEPTIONS = ["To be filled", "Default", "N/A", "[Not Supported]", "[n
 
 # ! Определение путей
 NVIDIA_SMI_PATH_SUPPORTED = {
+    "Windows-AMD64": os.path.join(os.path.dirname(__file__), "data\\nsmi\\Windows-x86_64\\nsmi.exe"),
     "Windows-x86_64": os.path.join(os.path.dirname(__file__), "data\\nsmi\\Windows-x86_64\\nsmi.exe"),
     "Linux-x86_64": os.path.join(os.path.dirname(__file__), "data/nsmi/Linux-x86_64/nsmi")
 }
 T_CPU_PATH_SUPPORTED = {
-    "Windows-x86_64": os.path.join(os.path.dirname(__file__), "data\\t_cpu\\Windows\\parser.py")
+    "Windows-AMD64": os.path.join(os.path.dirname(__file__), "data\\t_cpu\\Windows-x86_64\\parser.py"),
+    "Windows-x86_64": os.path.join(os.path.dirname(__file__), "data\\t_cpu\\Windows-x86_64\\parser.py")
 }
 
 NVIDIA_SMI_PATH: str = NVIDIA_SMI_PATH_SUPPORTED.get(systag(), None)
