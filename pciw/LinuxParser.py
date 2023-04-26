@@ -1,7 +1,8 @@
 import cpuinfo
+import screeninfo
 import subprocess
 from typing import Any, Dict, List, Optional
-# Local Import's
+# > Local Import's
 from . import conv
 from . import units
 
@@ -122,3 +123,13 @@ def get_nvidia_videocards() -> List[Dict[str, Any]]:
     if len(data:=get_nvidia_videocards_nsmi()) == 0:
         data = get_nvidia_videocards_pynvml()
     return data
+
+def get_monitors() -> List[Dict[str, Any]]:
+    return [
+        {
+            "name": conv.replaces(i.name, {"\\": "", ".": ""}),
+            "size": (i.width, i.height),
+            "size_mm": (i.width_mm, i.height),
+            "is_primary": i.is_primary
+        } for i in screeninfo.get_monitors()
+    ]

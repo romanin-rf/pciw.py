@@ -13,4 +13,4 @@ from .pciw import (
 )
 
 __name__ = "pciw.py"
-__version__ = "0.9.6"
+__version__ = "0.9.7"
