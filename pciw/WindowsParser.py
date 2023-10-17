@@ -3,7 +3,7 @@ import sys
 import cpuinfo
 import screeninfo
 import subprocess
-from typing import Any, List, Optional, Dict
+from typing import Any, List, Optional, Dict, Literal
 # Local Import's
 from . import conv
 from . import units
@@ -38,21 +38,35 @@ def tcpu_admin() -> str:
     return subprocess.check_output([units.T_CPU_PATH_ADMIN]).decode(errors="ignore")
 
 # ! Функции определения
-def get_mff(code: int) -> str: return units.NT.MEMORY_FORM_FACTOR.get(code, None)
-def get_mtype(code: int) -> str: return units.NT.MEMORY_TYPE.get(code, None)
-def get_vmtype(code: int) -> str: return units.NT.VIDEO_MEMORY_TYPE.get(code, None)
-def get_varch(code: int) -> str: return units.NT.VIDEO_ARCHITECTURE.get(code, None)
-def get_vaval(code: int) -> str: return units.NT.VIDEO_ALAILABILITY.get(code, None)
+def get_mff(code: int) -> str:
+    return units.NT.MEMORY_FORM_FACTOR.get(code, None)
+
+def get_mtype(code: int) -> str:
+    return units.NT.MEMORY_TYPE.get(code, None)
+
+def get_vmtype(code: int) -> str:
+    return units.NT.VIDEO_MEMORY_TYPE.get(code, None)
+
+def get_varch(code: int) -> str:
+    return units.NT.VIDEO_ARCHITECTURE.get(code, None)
+
+def get_vaval(code: int) -> str:
+    return units.NT.VIDEO_ALAILABILITY.get(code, None)
+
 def chrct(code: int) -> str:
     bios_char = units.NT.BIOS_CHARACTERISTICS.get(code, None)
-    if bios_char is not None: bios_char = bios_char.format(code=code)
-    else: bios_char = f"<UNKNOWN{code}>"
+    if bios_char is not None:
+        bios_char = bios_char.format(code=code)
+    else:
+        bios_char = f"<UNKNOWN{code}>"
     return bios_char
+
 def tnvv(value: Optional[str]) -> Optional[str]:
     if value is not None:
         if value in units.NONE_TYPE_EXCEPTIONS:
             return None
     return value
+
 def get_nv_actiovitions(code: Optional[str]) -> Optional[bool]:
     if code is not None:
         if code == "Enabled":
@@ -143,9 +157,9 @@ def get_nvidia_videocards_pynvml() -> List[Dict[str, Any]]:
                 "display_mode": get_nv_actiovitions(i.get("display_mode", None)),
                 "status": {
                     "utilization": i.get("utilization", {}).get("gpu_util", None),
-                    "memory_total": i.get("total", None),
-                    "memory_used": i.get("used", None),
-                    "memory_free": i.get("free", None),
+                    "memory_total": conv.oround(conv.aripti(i.get("fb_memory_usage", {}).get("total", None), "*1048576")),
+                    "memory_used": conv.oround(conv.aripti(i.get("fb_memory_usage", {}).get("used", None), "*1048576")),
+                    "memory_free": conv.oround(conv.aripti(i.get("fb_memory_usage", {}).get("free", None), "*1048576")),
                     "temperature": i.get("temperature", {}).get("gpu_temp", None),
                     "fan_speed": conv.to_int(i.get("fan_speed", None))
                 }
@@ -154,7 +168,12 @@ def get_nvidia_videocards_pynvml() -> List[Dict[str, Any]]:
     return out
 
 def get_nvidia_videocards_nsmi() -> List[Dict[str, Any]]:
-    d, out = conv.from_csv(nsmi("--query-gpu=index,uuid,utilization.gpu,driver_version,name,gpu_serial,display_active,display_mode,memory.total,memory.used,memory.free,temperature.gpu,fan.speed", "--format=csv,noheader,nounits"), header=["index", "uuid", "utilization.gpu", "driver_version", "name", "gpu_serial", "display_active", "display_mode", "memory.total", "memory.used", "memory.free", "temperature.gpu", "fan.speed"], sep=", ", end="\r\n"), []
+    d, out = conv.from_csv(
+        nsmi("--query-gpu=index,uuid,utilization.gpu,driver_version,name,gpu_serial,display_active,display_mode,memory.total,memory.used,memory.free,temperature.gpu,fan.speed", "--format=csv,noheader,nounits"),
+        header=["index", "uuid", "utilization.gpu", "driver_version", "name", "gpu_serial", "display_active", "display_mode", "memory.total", "memory.used", "memory.free", "temperature.gpu", "fan.speed"],
+        sep=", ",
+        end="\r\n"
+    ), []
     for i in d:
         out.append(
             {
@@ -167,9 +186,9 @@ def get_nvidia_videocards_nsmi() -> List[Dict[str, Any]]:
                 "display_mode": tnvv(i.get("display_mode", None)),
                 "status": {
                     "utilization": conv.to_int(i.get("utilization.gpu", None)),
-                    "memory_total": conv.to_int(i.get("memory.total", None)),
-                    "memory_used": conv.to_int(i.get("memory.used", None)),
-                    "memory_free": conv.to_int(i.get("memory.free", None)),
+                    "memory_total": conv.oround(conv.aripti(conv.to_int(i.get("memory.total", None)), "*1048576")),
+                    "memory_used": conv.oround(conv.aripti(conv.to_int(i.get("memory.used", None)), "*1048576")),
+                    "memory_free": conv.oround(conv.aripti(conv.to_int(i.get("memory.free", None)), "*1048576")),
                     "temperature": conv.to_int(i.get("temperature.gpu", None)),
                     "fan_speed": conv.to_int(i.get("fan.speed", None))
                 }
@@ -177,8 +196,17 @@ def get_nvidia_videocards_nsmi() -> List[Dict[str, Any]]:
         )
     return out
 
-def get_nvidia_videocards() -> List[Dict[str, Any]]:
-    if len(data:=get_nvidia_videocards_nsmi()) == 0: data = get_nvidia_videocards_pynvml()
+def get_nvidia_videocards(priority: Literal['nvml', 'nsmi']='nvml') -> List[Dict[str, Any]]:
+    if priority == 'nvml':
+        f1, f2 = get_nvidia_videocards_pynvml, get_nvidia_videocards_nsmi
+    elif priority == 'nsmi':
+        f1, f2 = get_nvidia_videocards_nsmi, get_nvidia_videocards_pynvml
+    else:
+        raise ValueError("The 'priority' argument can be: 'nvml' or 'nsmi'")
+    
+    if len(data:=f1()) == 0:
+        data = f2()
+    
     return data
 
 def get_videocards() -> List[Dict[str, Any]]:

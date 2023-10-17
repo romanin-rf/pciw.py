@@ -1,10 +1,14 @@
 import datetime
 from dateutil import parser
-from typing import Union, List, Optional, Tuple, Dict
-# ! Локальные импорты
+from typing import Union, List, Optional, Tuple, Dict, TypeVar
+# > Локальные импорты
 from . import tree
-from . import units
+from . import units 
 
+# ! Types
+VT = TypeVar('VT')
+
+# ! Vars
 LINUX_BYTES_NAMES: Dict[str, int] = {
     "KiB": 1024,
     "MiB": 1024**2,
@@ -12,7 +16,7 @@ LINUX_BYTES_NAMES: Dict[str, int] = {
     "TiB": 1024**4,
 }
 
-# Функции редактирования
+# ! Функции редактирования
 def removes(l: list, ldv: list) -> list:
     for value in ldv:
         for i in range(0, l.count(value)):
@@ -127,3 +131,12 @@ def sn(string: Optional[str]) -> Optional[str]:
     if string is not None:
         if not startswiths(string, units.NONE_TYPE_EXCEPTIONS):
             return string
+
+# ! Optional Functions
+def aripti(value: VT, operation: str="+0") -> VT:
+    if value is not None:
+        return eval(f'{value}{operation}')
+
+def oround(value: VT) -> Optional[VT]:
+    if value is not None:
+        return round(value)

@@ -117,11 +117,11 @@ def get_bios_info() -> BIOS:
     return BIOS(**info, smbios=smbios)
 
 @supporter.add_support(["Windows", "Linux"], [])
-def get_ngpu_info() -> List[NGPU]:
+def get_ngpu_info(priority: Literal['nvml', 'nsmi']='nvml') -> List[NGPU]:
     """Returns the `NGPU` dataclass, containing video card information (ONLY FOR NVIDIA VIDEO CARDS)"""
     ngpus: List[NGPU] = []
     try:
-        for i in Parser.get_nvidia_videocards():
+        for i in Parser.get_nvidia_videocards(priority):
             i["status"]["temperature"] = __gt(i["status"]["temperature"], "C")
             i["status"] = NGPUStatus(**i["status"])
             i["driver_version"] = _gV(i["driver_version"])

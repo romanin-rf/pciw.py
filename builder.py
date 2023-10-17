@@ -4,7 +4,6 @@ import subprocess
 import click
 import json
 from rich.console import Console
-from rich.syntax import Syntax
 
 # ! Other
 LOCALDIR = os.path.dirname(__file__)

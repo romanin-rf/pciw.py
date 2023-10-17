@@ -1,7 +1,7 @@
 import cpuinfo
 import screeninfo
 import subprocess
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Literal
 # > Local Import's
 from . import conv
 from . import units
@@ -71,9 +71,9 @@ def get_nvidia_videocards_pynvml() -> List[Dict[str, Any]]:
                 "display_mode": get_nv_actiovitions(i.get("display_mode", None)),
                 "status": {
                     "utilization": i.get("utilization", {}).get("gpu_util", None),
-                    "memory_total": i.get("total", None),
-                    "memory_used": i.get("used", None),
-                    "memory_free": i.get("free", None),
+                    "memory_total": conv.oround(conv.aripti(i.get("fb_memory_usage", {}).get("total", None), "*1048576")),
+                    "memory_used": conv.oround(conv.aripti(i.get("fb_memory_usage", {}).get("used", None), "*1048576")),
+                    "memory_free": conv.oround(conv.aripti(i.get("fb_memory_usage", {}).get("free", None), "*1048576")),
                     "temperature": i.get("temperature", {}).get("gpu_temp", None),
                     "fan_speed": conv.to_int(i.get("fan_speed", None))
                 }
@@ -109,9 +109,9 @@ def get_nvidia_videocards_nsmi() -> List[Dict[str, Any]]:
                 "display_mode": tnvv(i.get("display_mode", None)),
                 "status": {
                     "utilization": conv.to_int(i.get("utilization.gpu", None)),
-                    "memory_total": conv.to_int(i.get("memory.total", None)),
-                    "memory_used": conv.to_int(i.get("memory.used", None)),
-                    "memory_free": conv.to_int(i.get("memory.free", None)),
+                    "memory_total": conv.oround(conv.aripti(conv.to_int(i.get("memory.total", None)), "*1048576")),
+                    "memory_used": conv.oround(conv.aripti(conv.to_int(i.get("memory.used", None)), "*1048576")),
+                    "memory_free": conv.oround(conv.aripti(conv.to_int(i.get("memory.free", None)), "*1048576")),
                     "temperature": conv.to_int(i.get("temperature.gpu", None)),
                     "fan_speed": conv.to_int(i.get("fan.speed", None))
                 }
@@ -119,9 +119,17 @@ def get_nvidia_videocards_nsmi() -> List[Dict[str, Any]]:
         )
     return out
 
-def get_nvidia_videocards() -> List[Dict[str, Any]]:
-    if len(data:=get_nvidia_videocards_nsmi()) == 0:
-        data = get_nvidia_videocards_pynvml()
+def get_nvidia_videocards(priority: Literal['nvml', 'nsmi']='nvml') -> List[Dict[str, Any]]:
+    if priority == 'nvml':
+        f1, f2 = get_nvidia_videocards_pynvml, get_nvidia_videocards_nsmi
+    elif priority == 'nsmi':
+        f1, f2 = get_nvidia_videocards_nsmi, get_nvidia_videocards_pynvml
+    else:
+        raise ValueError("The 'priority' argument can be: 'nvml' or 'nsmi'")
+    
+    if len(data:=f1()) == 0:
+        data = f2()
+    
     return data
 
 def get_monitors() -> List[Dict[str, Any]]:
