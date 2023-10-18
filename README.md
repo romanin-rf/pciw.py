@@ -1,10 +1,10 @@
 # pciw.py
-This module can obtain __full information__ about the `CPU`, `RAM`, `GPU`, `Monitors`, `Motherboard` and `BIOS`.
+This module can obtain __full information__ about the `CPU`, `RAM`, `GPU`, `Monitors`, `Motherboard`, `Videocards` and `BIOS`.
 
 So far, it __only works fully__ on a `Windows` system.
 ## Install
 ```
-pip install --upgrade pciw.py
+pip install -U pciw.py
 ```
 ## Example
 For the example made by `__main__.py`:

@@ -1,12 +1,9 @@
 import datetime
 from dateutil import parser
-from typing import Union, List, Optional, Tuple, Dict, TypeVar
+from typing import Union, List, Optional, Tuple, Dict
 # > Локальные импорты
 from . import tree
-from . import units 
-
-# ! Types
-VT = TypeVar('VT')
+from . import units
 
 # ! Vars
 LINUX_BYTES_NAMES: Dict[str, int] = {
@@ -41,12 +38,22 @@ def to_bool(string: str) -> Optional[bool]:
     except: pass
 
 def to_int(string: Optional[str]) -> Optional[int]:
-    try: return int(str(string).lower().replace(" ", ""))
-    except: pass
+    try:
+        return int(str(string).lower().replace(" ", ""))
+    except:
+        try:
+            return round(float(replaces(str(string).lower(), {" ": "", ",": "."})))
+        except:
+            pass
 
 def to_float(string: Optional[str]) -> Optional[float]:
-    try: return float(replaces(str(string).lower(), {" ": "", ",": "."}))
-    except: pass
+    try:
+        return float(replaces(str(string).lower(), {" ": "", ",": "."}))
+    except:
+        try:
+            return float(int(str(string).lower().replace(" ", "")))
+        except:
+            pass
 
 def from_values(string: str) -> List[Dict[str, Optional[str]]]:
     data: List[List[str]] = [
@@ -133,10 +140,10 @@ def sn(string: Optional[str]) -> Optional[str]:
             return string
 
 # ! Optional Functions
-def aripti(value: VT, operation: str="+0") -> VT:
+def aripti(value, operation: str="+0"):
     if value is not None:
         return eval(f'{value}{operation}')
 
-def oround(value: VT) -> Optional[VT]:
+def oround(value):
     if value is not None:
         return round(value)

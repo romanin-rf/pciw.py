@@ -58,24 +58,41 @@ def get_cpu() -> Dict[str, Any]:
     }
 
 def get_nvidia_videocards_pynvml() -> List[Dict[str, Any]]:
-    d, out = nsmi2('index', 'uuid', 'utilization.gpu', 'driver_version', 'name', 'gpu_serial', 'display_active', 'display_mode', 'memory.total', 'memory.used', 'memory.free', 'temperature.gpu', 'fan.speed'), []
+    d, out = nsmi2(
+        'index', 'uuid', 'utilization.gpu',
+        'utilization.memory', 'utilization.encoder',
+        'utilization.decoder', 'utilization.jpeg',
+        'utilization.ofa', 'driver_version',
+        'name', 'gpu_serial', 'display_active',
+        'display_mode', 'memory.total',
+        'memory.used', 'memory.free',
+        'temperature.gpu', 'fan.speed',
+        'power.draw', 'power.max_limit'
+    ), []
     for idx, i in enumerate(d):
         out.append(
             {
-                "name": i.get("product_name", None),
                 "id": idx,
+                "name": i.get("product_name", None),
                 "uuid": i.get("uuid", None),
                 "driver_version": i.get("driver_version", None),
-                "serial_number": conv.sn(i.get("serial", None)),
+                "serial_number": conv.sn(tnvv(i.get("serial", None))),
                 "display_active": get_nv_actiovitions(i.get("display_active", None)),
                 "display_mode": get_nv_actiovitions(i.get("display_mode", None)),
                 "status": {
-                    "utilization": i.get("utilization", {}).get("gpu_util", None),
+                    "utilization_gpu": i.get("utilization", {}).get("gpu_util", None),
+                    "utilization_memory": i.get("utilization", {}).get("memory_util", None),
+                    "utilization_encoder": i.get("utilization", {}).get("encoder_util", None),
+                    "utilization_decoder": i.get("utilization", {}).get("decoder_util", None),
+                    "utilization_jpeg": i.get("utilization", {}).get("jpeg_util", None),
+                    "utilization_ofa": i.get("utilization", {}).get("ofa_util", None),
                     "memory_total": conv.oround(conv.aripti(i.get("fb_memory_usage", {}).get("total", None), "*1048576")),
                     "memory_used": conv.oround(conv.aripti(i.get("fb_memory_usage", {}).get("used", None), "*1048576")),
                     "memory_free": conv.oround(conv.aripti(i.get("fb_memory_usage", {}).get("free", None), "*1048576")),
                     "temperature": i.get("temperature", {}).get("gpu_temp", None),
-                    "fan_speed": conv.to_int(i.get("fan_speed", None))
+                    "fan_speed": conv.to_int(i.get("fan_speed", None)),
+                    "power_currect": conv.to_int(i.get("power_readings", {}).get("power_draw", None)),
+                    "power_maximum": conv.to_int(i.get("power_readings", {}).get("max_power_limit", None))
                 }
             }
         )
@@ -84,18 +101,21 @@ def get_nvidia_videocards_pynvml() -> List[Dict[str, Any]]:
 def get_nvidia_videocards_nsmi() -> List[Dict[str, Any]]:
     d, out = conv.from_csv(
         nsmi(
-            "--query-gpu=index,uuid,utilization.gpu,driver_version,name,gpu_serial,display_active,display_mode,memory.total,memory.used,memory.free,temperature.gpu,fan.speed",
+            "--query-gpu=index,uuid,utilization.gpu,utilization.memory,utilization.encoder,utilization.decoder,utilization.jpeg,utilization.ofa,driver_version,name,gpu_serial,display_active,display_mode,memory.total,memory.used,memory.free,temperature.gpu,fan.speed,power.draw,power.max_limit",
             "--format=csv,noheader,nounits"
-        ), 
+        ),
         header=[
-            "index", "uuid", "utilization.gpu",
-            "driver_version", "name", "gpu_serial",
-            "display_active", "display_mode", "memory.total",
-            "memory.used", "memory.free", "temperature.gpu",
-            "fan.speed"
+            'index', 'uuid', 'utilization.gpu',
+            'utilization.memory', 'utilization.encoder',
+            'utilization.decoder', 'utilization.jpeg',
+            'utilization.ofa', 'driver_version', 'name',
+            'gpu_serial', 'display_active', 'display_mode',
+            'memory.total', 'memory.used', 'memory.free',
+            'temperature.gpu', 'fan.speed', 'power.draw',
+            'power.max_limit'
         ],
         sep=", ",
-        end="\n"
+        end="\r\n"
     ), []
     for i in d:
         out.append(
@@ -104,22 +124,29 @@ def get_nvidia_videocards_nsmi() -> List[Dict[str, Any]]:
                 "name": i.get("name", None),
                 "uuid": i.get("uuid", None),
                 "driver_version": i.get("driver_version", None),
-                "serial_number": conv.sn(i.get("gpu_serial", None)),
-                "display_active": tnvv(i.get("display_active", None)),
-                "display_mode": tnvv(i.get("display_mode", None)),
+                "serial_number": conv.sn(tnvv(i.get("gpu_serial", None))),
+                "display_active": get_nv_actiovitions(tnvv(i.get("display_active", None))),
+                "display_mode": get_nv_actiovitions(tnvv(i.get("display_mode", None))),
                 "status": {
-                    "utilization": conv.to_int(i.get("utilization.gpu", None)),
+                    "utilization_gpu": conv.to_int(i.get("utilization.gpu", None)),
+                    "utilization_memory": conv.to_int(i.get("utilization.memory", None)),
+                    "utilization_encoder": conv.to_int(i.get("utilization.encoder", None)),
+                    "utilization_decoder": conv.to_int(i.get("utilization.decoder", None)),
+                    "utilization_jpeg": conv.to_int(i.get("utilization.jpeg", None)),
+                    "utilization_ofa": conv.to_int(i.get("utilization.ofa", None)),
                     "memory_total": conv.oround(conv.aripti(conv.to_int(i.get("memory.total", None)), "*1048576")),
                     "memory_used": conv.oround(conv.aripti(conv.to_int(i.get("memory.used", None)), "*1048576")),
                     "memory_free": conv.oround(conv.aripti(conv.to_int(i.get("memory.free", None)), "*1048576")),
                     "temperature": conv.to_int(i.get("temperature.gpu", None)),
-                    "fan_speed": conv.to_int(i.get("fan.speed", None))
+                    "fan_speed": conv.to_int(i.get("fan.speed", None)),
+                    "power_currect": conv.to_int(i.get("power.draw", None)),
+                    "power_maximum": conv.to_int(i.get("power.max_limit", None))
                 }
             }
         )
     return out
 
-def get_nvidia_videocards(priority: Literal['nvml', 'nsmi']='nvml') -> List[Dict[str, Any]]:
+def get_nvidia_videocards(priority: Literal['nvml', 'nsmi']='nsmi') -> List[Dict[str, Any]]:
     if priority == 'nvml':
         f1, f2 = get_nvidia_videocards_pynvml, get_nvidia_videocards_nsmi
     elif priority == 'nsmi':

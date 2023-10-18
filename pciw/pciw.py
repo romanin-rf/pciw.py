@@ -117,7 +117,7 @@ def get_bios_info() -> BIOS:
     return BIOS(**info, smbios=smbios)
 
 @supporter.add_support(["Windows", "Linux"], [])
-def get_ngpu_info(priority: Literal['nvml', 'nsmi']='nvml') -> List[NGPU]:
+def get_ngpu_info(priority: Literal['nsmi', 'nvml']='nsmi') -> List[NGPU]:
     """Returns the `NGPU` dataclass, containing video card information (ONLY FOR NVIDIA VIDEO CARDS)"""
     ngpus: List[NGPU] = []
     try:

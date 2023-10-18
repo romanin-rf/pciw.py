@@ -11,6 +11,3 @@ from .pciw import (
     NGPU, NGPUStatus, NvidiaSMIError, GPU,
     RAMBank, BIOS, Monitor, Motherboard, SMBIOS
 )
-
-__name__ = "pciw.py"
-__version__ = "0.9.8"
