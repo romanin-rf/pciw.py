@@ -1,10 +1,11 @@
 import datetime
 from dateutil import parser
 from typing import Union, List, Optional, Tuple, Dict
-# ! Локальные импорты
+# > Локальные импорты
 from . import tree
 from . import units
 
+# ! Vars
 LINUX_BYTES_NAMES: Dict[str, int] = {
     "KiB": 1024,
     "MiB": 1024**2,
@@ -12,7 +13,7 @@ LINUX_BYTES_NAMES: Dict[str, int] = {
     "TiB": 1024**4,
 }
 
-# Функции редактирования
+# ! Функции редактирования
 def removes(l: list, ldv: list) -> list:
     for value in ldv:
         for i in range(0, l.count(value)):
@@ -37,12 +38,22 @@ def to_bool(string: str) -> Optional[bool]:
     except: pass
 
 def to_int(string: Optional[str]) -> Optional[int]:
-    try: return int(str(string).lower().replace(" ", ""))
-    except: pass
+    try:
+        return int(str(string).lower().replace(" ", ""))
+    except:
+        try:
+            return round(float(replaces(str(string).lower(), {" ": "", ",": "."})))
+        except:
+            pass
 
 def to_float(string: Optional[str]) -> Optional[float]:
-    try: return float(replaces(str(string).lower(), {" ": "", ",": "."}))
-    except: pass
+    try:
+        return float(replaces(str(string).lower(), {" ": "", ",": "."}))
+    except:
+        try:
+            return float(int(str(string).lower().replace(" ", "")))
+        except:
+            pass
 
 def from_values(string: str) -> List[Dict[str, Optional[str]]]:
     data: List[List[str]] = [
@@ -127,3 +138,12 @@ def sn(string: Optional[str]) -> Optional[str]:
     if string is not None:
         if not startswiths(string, units.NONE_TYPE_EXCEPTIONS):
             return string
+
+# ! Optional Functions
+def aripti(value, operation: str="+0"):
+    if value is not None:
+        return eval(f'{value}{operation}')
+
+def oround(value):
+    if value is not None:
+        return round(value)

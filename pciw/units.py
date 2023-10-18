@@ -1,17 +1,39 @@
 import os
+import glob
 import platform
 
 # ! Функции получения тега системы
-def systag() -> str: return f"{platform.system()}-{platform.machine()}"
+def systag() -> str:
+    return f"{platform.system()}-{platform.machine()}"
 
 # ! Для функций
-NONE_TYPE_EXCEPTIONS = ["To be filled", "Default", "N/A", "[Not Supported]", "[notsupported]"]
+NONE_TYPE_EXCEPTIONS = [
+    "tobefilled", "default", "n/a",
+    "[notsupported]", "[n/a]",
+    "tobefilledbyo.e.m."
+]
+
+# ! Поиск nvidia-smi (WINDOWS ONLY)
+WINDOWS_NVIDIA_SMI_PATH = "nvidia-smi"
+WINDOWS_NVIDIA_SMI_POSSIBLE_PATHS = [
+    "{sd}\\Windows\\System32\\DriverStore\\FileRepository\\*\\nvidia-smi.exe",
+    "{sd}\\Program Files\\NVIDIA Corporation\\NVSMI\\*\\nvidia-smi.exe"
+]
+
+if platform.system() == "Windows":
+    system_drive = os.getenv("SystemDrive")
+    for possible_path in WINDOWS_NVIDIA_SMI_POSSIBLE_PATHS:
+        gwnsmi = glob.glob(possible_path.format(sd=system_drive), recursive=True)
+        if len(gwnsmi) != 0:
+            WINDOWS_NVIDIA_SMI_PATH = gwnsmi[0]
+            break
+    del system_drive
 
 # ! Определение путей
 NVIDIA_SMI_PATH_SUPPORTED = {
-    "Windows-AMD64": os.path.join(os.path.dirname(__file__), "data\\nsmi\\Windows-x86_64\\nsmi.exe"),
-    "Windows-x86_64": os.path.join(os.path.dirname(__file__), "data\\nsmi\\Windows-x86_64\\nsmi.exe"),
-    "Linux-x86_64": os.path.join(os.path.dirname(__file__), "data/nsmi/Linux-x86_64/nsmi")
+    "Windows-AMD64": WINDOWS_NVIDIA_SMI_PATH,
+    "Windows-x86_64": WINDOWS_NVIDIA_SMI_PATH,
+    "Linux-x86_64": "nvidia-smi"
 }
 T_CPU_PATH_SUPPORTED = {
     "Windows-AMD64": os.path.join(os.path.dirname(__file__), "data\\t_cpu\\Windows-x86_64\\parser.py"),

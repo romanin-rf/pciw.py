@@ -115,10 +115,17 @@ class GPU:
 
 @dataclass
 class NGPUStatus:
-    utilization: int
+    utilization_gpu: int
+    utilization_memory: int
+    utilization_encoder: int
+    utilization_decoder: int
+    utilization_jpeg: int
+    utilization_ofa: int
     memory_total: float
     memory_used: float
     memory_free: float
+    power_currect: int
+    power_maximum: int
     temperature: Temperature
     fan_speed: int
 

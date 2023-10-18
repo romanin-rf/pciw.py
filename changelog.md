@@ -1,5 +1,19 @@
 # Changelog pciw.py
 ## Versions
+- **[0.9.9]**
+    - Added the use of poetry
+    - Added getting percentage load on memory, encoder, decoder and OFA
+    - Added search for nvidia-smi executable for Windows
+    - Removed build scripts
+    - Removed nvidia-smi executables
+    - Removed excessive typing in `conv.py`
+    - Fixed definition of None-data
+- **[0.9.8]**
+    - Removed docs
+    - Added 'priority' argument to the 'pciw.get_ngpu_info' function to select the priority API to get information from
+    - Fixed incorrect representation of data quantity (everything will now be returned in number of bytes)
+- **[0.9.7]**
+    - Added monitor definition definition monitors definition monitors definition
 - **[0.9.6]**
     - Fix builder.py
     - Refactoring builder.py

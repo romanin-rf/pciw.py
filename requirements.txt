@@ -1,6 +1,0 @@
-screeninfo
-py-cpuinfo
-python-dateutil
-rich
-pynvml
-elevate
