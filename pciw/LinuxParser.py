@@ -67,7 +67,9 @@ def get_nvidia_videocards_pynvml() -> List[Dict[str, Any]]:
         'display_mode', 'memory.total',
         'memory.used', 'memory.free',
         'temperature.gpu', 'fan.speed',
-        'power.draw', 'power.max_limit'
+        'power.draw', 'power.max_limit', 
+        'clocks.gr','clocks.mem','clocks.sm',
+        'clocks.max.gr','clocks.max.mem','clocks.max.sm'
     ), []
     for idx, i in enumerate(d):
         out.append(
@@ -92,7 +94,13 @@ def get_nvidia_videocards_pynvml() -> List[Dict[str, Any]]:
                     "temperature": i.get("temperature", {}).get("gpu_temp", None),
                     "fan_speed": conv.to_int(i.get("fan_speed", None)),
                     "power_currect": conv.to_int(i.get("power_readings", {}).get("power_draw", None)),
-                    "power_maximum": conv.to_int(i.get("power_readings", {}).get("max_power_limit", None))
+                    "power_maximum": conv.to_int(i.get("power_readings", {}).get("max_power_limit", None)),
+                    "clocks_currect_graphics": conv.to_int(i.get("clocks", {}).get("graphics_clock", None)),
+                    "clocks_currect_memory": conv.to_int(i.get("clocks", {}).get("mem_clock", None)),
+                    "clocks_currect_sm": conv.to_int(i.get("clocks", {}).get("sm_clock", None)),
+                    "clocks_max_graphics": conv.to_int(i.get("max_clocks", {}).get("graphics_clock", None)),
+                    "clocks_max_memory": conv.to_int(i.get("max_clocks", {}).get("mem_clock", None)),
+                    "clocks_max_sm": conv.to_int(i.get("max_clocks", {}).get("sm_clock", None))
                 }
             }
         )
@@ -101,7 +109,7 @@ def get_nvidia_videocards_pynvml() -> List[Dict[str, Any]]:
 def get_nvidia_videocards_nsmi() -> List[Dict[str, Any]]:
     d, out = conv.from_csv(
         nsmi(
-            "--query-gpu=index,uuid,utilization.gpu,utilization.memory,utilization.encoder,utilization.decoder,utilization.jpeg,utilization.ofa,driver_version,name,gpu_serial,display_active,display_mode,memory.total,memory.used,memory.free,temperature.gpu,fan.speed,power.draw,power.max_limit",
+            "--query-gpu=index,uuid,utilization.gpu,utilization.memory,utilization.encoder,utilization.decoder,utilization.jpeg,utilization.ofa,driver_version,name,gpu_serial,display_active,display_mode,memory.total,memory.used,memory.free,temperature.gpu,fan.speed,power.draw,power.max_limit,clocks.gr,clocks.mem,clocks.sm,clocks.max.gr,clocks.max.mem,clocks.max.sm",
             "--format=csv,noheader,nounits"
         ),
         header=[
@@ -111,8 +119,10 @@ def get_nvidia_videocards_nsmi() -> List[Dict[str, Any]]:
             'utilization.ofa', 'driver_version', 'name',
             'gpu_serial', 'display_active', 'display_mode',
             'memory.total', 'memory.used', 'memory.free',
-            'temperature.gpu', 'fan.speed', 'power.draw',
-            'power.max_limit'
+            'temperature.gpu', 'fan.speed',
+            'power.draw', 'power.max_limit', 
+            'clocks.graphics', 'clocks.memory', 'clocks.sm',
+            'clocks.max.graphics', 'clocks.max.memory', 'clocks.max.sm'
         ],
         sep=", ",
         end="\r\n"
@@ -140,7 +150,13 @@ def get_nvidia_videocards_nsmi() -> List[Dict[str, Any]]:
                     "temperature": conv.to_int(i.get("temperature.gpu", None)),
                     "fan_speed": conv.to_int(i.get("fan.speed", None)),
                     "power_currect": conv.to_int(i.get("power.draw", None)),
-                    "power_maximum": conv.to_int(i.get("power.max_limit", None))
+                    "power_maximum": conv.to_int(i.get("power.max_limit", None)),
+                    "clocks_currect_graphics": conv.to_int(i.get("clocks.graphics", None)),
+                    "clocks_currect_memory": conv.to_int(i.get("clocks.memory", None)),
+                    "clocks_currect_sm": conv.to_int(i.get("clocks.sm", None)),
+                    "clocks_max_graphics": conv.to_int(i.get("clocks.max.graphics", None)),
+                    "clocks_max_memory": conv.to_int(i.get("clocks.max.memory", None)),
+                    "clocks_max_sm": conv.to_int(i.get("clocks.max.sm", None))
                 }
             }
         )
