@@ -1,11 +1,11 @@
 [tool.poetry]
 name = "pciw.py"
-version = "0.9.9"
+version = "0.9.10"
 license = "MIT"
 readme = "README.md"
 description = "Module for obtaining system information."
 authors = ["Romanin <semina054@gmail.com>"]
-include = ["CHANGELOG.md"]
+include = ["changelog.md"]
 packages = [{include = "pciw"}]
 repository = "https://github.com/romanin-rf/pciw.py"
 keywords = ["pciw", "pciw.py", "info", "system", "os", "bios", "videocard", "motherboard", "ram"]

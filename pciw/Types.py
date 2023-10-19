@@ -128,6 +128,21 @@ class NGPUStatus:
     power_maximum: int
     temperature: Temperature
     fan_speed: int
+    clocks_currect_graphics: int
+    clocks_currect_memory: int
+    clocks_currect_sm: int
+    clocks_max_graphics: int
+    clocks_max_memory: int
+    clocks_max_sm: int
+
+"""
+clocks_currect_graphics
+clocks_currect_memory
+clocks_currect_sm
+clocks_max_graphics
+clocks_max_memory
+clocks_max_sm
+"""
 
 @dataclass
 class NGPU:

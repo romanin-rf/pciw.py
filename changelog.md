@@ -1,5 +1,8 @@
 # Changelog pciw.py
 ## Versions
+- **[0.9.10]**
+    - Added frequency acquisition for NVIDIA graphics cards
+    - Deleted setup.py
 - **[0.9.9]**
     - Added the use of poetry
     - Added getting percentage load on memory, encoder, decoder and OFA
