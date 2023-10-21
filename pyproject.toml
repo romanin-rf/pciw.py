@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pciw.py"
-version = "0.9.10"
+version = "0.10.0.dev1"
 license = "MIT"
 readme = "README.md"
 description = "Module for obtaining system information."

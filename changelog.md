@@ -1,5 +1,11 @@
 # Changelog pciw.py
 ## Versions
+- **[0.10.0]** *(IТ DEVELOPMENT)*
+    - Removed tcpu for Windows
+    - Rewritten parsers (Windows & Linux)
+    - Improved data output models
+    - Changed parser system
+    - Changed system of platform definition for importing parsers
 - **[0.9.10]**
     - Added frequency acquisition for NVIDIA graphics cards
     - Deleted setup.py
